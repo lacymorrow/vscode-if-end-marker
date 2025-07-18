@@ -1,4 +1,4 @@
-// Test file for If End Ghost Text extension
+// Test file for If End Marker extension
 
 function testFunction() {
     const userIsLoggedIn = true;
@@ -6,7 +6,7 @@ function testFunction() {
     const isExpired = false;
     const hasValidToken = true;
 
-    // This if statement shows ghost text 
+    // This if statement shows end marker 
     if (userIsLoggedIn && 
         hasPermission &&
         !isExpired) {
@@ -23,7 +23,7 @@ function testFunction() {
         console.log('All conditions met');
     }
 
-    // Short if statements won't show ghost text
+    // Short if statements won't show end markers
     if (userIsLoggedIn) {
         console.log('User is logged in');
     }

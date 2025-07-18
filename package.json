@@ -1,11 +1,13 @@
 {
   "name": "vscode-if-end-marker",
   "displayName": "If End Marker",
-  "description": "Display if conditions as subtle markers at the end of if statements in JavaScript and TypeScript files",
+  "description": "Never lose track of which if statement you're closing! Shows inline markers with the original condition at closing braces in JS/TS files.",
   "version": "0.0.1",
-  "publisher": "lacymorrow",
+  "publisher": "shipkit",
   "author": {
-    "name": "If End Ghost Text Contributors"
+    "name": "Lacy Morrow",
+    "email": "me@lacymorrow.com",
+    "url": "https://shipkit.io"
   },
   "license": "MIT",
   "homepage": "https://github.com/lacymorrow/vscode-if-end-marker#readme",
@@ -20,7 +22,6 @@
     "if",
     "condition",
     "marker",
-    "ghost text",
     "inline hints",
     "javascript",
     "typescript",
@@ -29,6 +30,7 @@
     "productivity",
     "code navigation"
   ],
+  "icon": "images/logo.png",
   "galleryBanner": {
     "color": "#2D2D30",
     "theme": "dark"
@@ -44,13 +46,13 @@
   "activationEvents": [
     "onLanguage:javascript",
     "onLanguage:typescript",
-    "onLanguage:javascriptreact", 
+    "onLanguage:javascriptreact",
     "onLanguage:typescriptreact"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
-      "title": "If End Ghost Text",
+      "title": "If End Marker",
       "properties": {
         "ifEndGhostText.maxConditionLength": {
           "type": "number",
@@ -90,25 +92,33 @@
     "lint": "tsc --noEmit",
     "test": "node ./out/test/runTest.js",
     "package": "vsce package --no-dependencies",
-    "publish": "vsce publish",
-    "version:patch": "npm version patch",
-    "version:minor": "npm version minor",
-    "version:major": "npm version major",
-    "release:patch": "npm run version:patch && npm run package && npm run publish",
-    "release:minor": "npm run version:minor && npm run package && npm run publish",
-    "release:major": "npm run version:major && npm run package && npm run publish",
-    "release": "npm run release:patch"
+    "publish:vsce": "vsce publish",
+    "release": "standard-version",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
+    "release:patch": "standard-version --release-as patch",
+    "release:first": "standard-version --first-release",
+    "publish": "npm run package && npm run publish:vsce",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "@types/vscode": "^1.74.0",
-    "@types/node": "16.x",
-    "@types/mocha": "^10.0.1",
+    "@commitlint/cli": "^19.8.1",
+    "@commitlint/config-conventional": "^19.8.1",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/git": "^10.0.1",
     "@types/glob": "^8.1.0",
-    "typescript": "^5.0.0",
-    "@vscode/vsce": "^2.19.0",
+    "@types/mocha": "^10.0.1",
+    "@types/node": "16.x",
+    "@types/vscode": "^1.74.0",
     "@vscode/test-electron": "^2.3.0",
+    "@vscode/vsce": "^2.19.0",
+    "glob": "^8.1.0",
+    "husky": "^9.1.7",
     "mocha": "^10.2.0",
-    "glob": "^8.1.0"
+    "semantic-release": "^24.2.7",
+    "standard-version": "^9.5.0",
+    "typescript": "^5.0.0"
   },
   "extensionPack": [],
   "extensionDependencies": []

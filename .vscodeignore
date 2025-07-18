@@ -31,6 +31,11 @@ test-example.js
 
 # Build and utility scripts
 install.sh
+scripts/
+.husky/
+.releaserc.json
+.versionrc.json
+commitlint.config.js
 
 # OS specific files
 **/.DS_Store
@@ -38,8 +43,9 @@ install.sh
 
 # Documentation assets
 images/demo.gif
-README-GITHUB.md
 GITHUB_DESCRIPTION.txt
+MARKETPLACE_DESCRIPTION.md
+PUBLISHING.md
 
 # Temporary files
 *.tmp

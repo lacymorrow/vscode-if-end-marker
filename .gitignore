@@ -47,3 +47,6 @@ coverage/
 *.tmp
 *.temp
 .cache/
+
+# Generated files
+CHANGELOG.md

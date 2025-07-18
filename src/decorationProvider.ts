@@ -3,10 +3,10 @@ import { ASTParser, IfStatement } from './parser';
 
 /**
  * Provides decoration functionality for displaying if statement conditions
- * as ghost text at the closing brace of if blocks.
+ * as inline markers at the closing brace of if blocks.
  */
 export class IfStatementDecorationProvider {
-    /** The decoration type used to render ghost text */
+    /** The decoration type used to render inline markers */
     private decorationType: vscode.TextEditorDecorationType;
     /** Parser instance for extracting if statements from code */
     private parser: ASTParser;
@@ -25,7 +25,7 @@ export class IfStatementDecorationProvider {
                 color: new vscode.ThemeColor('editorInlayHint.foreground'),
                 backgroundColor: new vscode.ThemeColor('editorInlayHint.background'),
                 fontStyle: 'italic',
-                margin: '0 0 0 1em' // Add spacing before the ghost text
+                margin: '0 0 0 1em' // Add spacing before the marker
             }
         });
         this.parser = new ASTParser();
@@ -168,7 +168,7 @@ export class IfStatementDecorationProvider {
      * @returns True if decoration should be shown, false otherwise
      */
     private shouldShowDecoration(ifStmt: IfStatement, document: vscode.TextDocument): boolean {
-        // Only show ghost text for if statements that span multiple lines
+        // Only show markers for if statements that span multiple lines
         // This avoids cluttering short if statements
         const config = vscode.workspace.getConfiguration('ifEndGhostText');
         const minLineCount = config.get<number>('minLineCount', 3);

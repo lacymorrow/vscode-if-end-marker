@@ -8,7 +8,7 @@ import { IfStatementDecorationProvider } from './decorationProvider';
  * @param context - The extension context provided by VS Code
  */
 export function activate(context: vscode.ExtensionContext) {
-    // Create the decoration provider instance that will handle all the ghost text logic
+    // Create the decoration provider instance that will handle all the marker logic
     const provider = new IfStatementDecorationProvider();
     
     // Debounce timer for text changes

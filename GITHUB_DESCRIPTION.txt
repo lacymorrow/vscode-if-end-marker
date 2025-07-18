@@ -12,7 +12,7 @@ code-navigation
 developer-tools
 conditional-logic
 inline-hints
-ghost-text
+inline-markers
 jsx
 tsx
 
