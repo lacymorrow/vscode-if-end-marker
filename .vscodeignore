@@ -1,0 +1,47 @@
+# Files to exclude from the extension package
+
+# VS Code specific
+.vscode/**
+.vscode-test/**
+
+# Source files (we only need compiled JS)
+src/**
+**/*.ts
+!src/test/**/*.ts
+
+# Development files
+.gitignore
+.git/**
+.github/**
+**/tsconfig.json
+**/.eslintrc.json
+**/*.map
+vsc-extension-quickstart.md
+CONTRIBUTING.md
+
+# Dependencies and build artifacts
+node_modules/**
+*.vsix
+package-lock.json
+
+# Test files
+test/**
+src/test/**
+test-example.js
+
+# Build and utility scripts
+install.sh
+
+# OS specific files
+**/.DS_Store
+**/Thumbs.db
+
+# Documentation assets
+images/demo.gif
+README-GITHUB.md
+GITHUB_DESCRIPTION.txt
+
+# Temporary files
+*.tmp
+*.temp
+.cache/**

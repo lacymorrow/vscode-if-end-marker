@@ -1,0 +1,115 @@
+{
+  "name": "vscode-if-end-marker",
+  "displayName": "If End Marker",
+  "description": "Display if conditions as subtle markers at the end of if statements in JavaScript and TypeScript files",
+  "version": "0.0.1",
+  "publisher": "lacymorrow",
+  "author": {
+    "name": "If End Ghost Text Contributors"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/lacymorrow/vscode-if-end-marker#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lacymorrow/vscode-if-end-marker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lacymorrow/vscode-if-end-marker/issues"
+  },
+  "keywords": [
+    "if",
+    "condition",
+    "marker",
+    "ghost text",
+    "inline hints",
+    "javascript",
+    "typescript",
+    "jsx",
+    "tsx",
+    "productivity",
+    "code navigation"
+  ],
+  "galleryBanner": {
+    "color": "#2D2D30",
+    "theme": "dark"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Formatters",
+    "Other"
+  ],
+  "activationEvents": [
+    "onLanguage:javascript",
+    "onLanguage:typescript",
+    "onLanguage:javascriptreact", 
+    "onLanguage:typescriptreact"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "If End Ghost Text",
+      "properties": {
+        "ifEndGhostText.maxConditionLength": {
+          "type": "number",
+          "default": 50,
+          "description": "Maximum number of characters to display from the condition"
+        },
+        "ifEndGhostText.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable if-end markers"
+        },
+        "ifEndGhostText.maxFileSize": {
+          "type": "number",
+          "default": 500000,
+          "description": "Maximum file size (in characters) to process. Larger files will be skipped for performance."
+        },
+        "ifEndGhostText.debounceDelay": {
+          "type": "number",
+          "default": 300,
+          "minimum": 50,
+          "maximum": 1000,
+          "description": "Delay in milliseconds before updating markers after text changes"
+        },
+        "ifEndGhostText.minLineCount": {
+          "type": "number",
+          "default": 4,
+          "minimum": 2,
+          "description": "Minimum number of lines an if statement must span to show markers"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile && npm run lint",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "tsc --noEmit",
+    "test": "node ./out/test/runTest.js",
+    "package": "vsce package --no-dependencies",
+    "publish": "vsce publish",
+    "version:patch": "npm version patch",
+    "version:minor": "npm version minor",
+    "version:major": "npm version major",
+    "release:patch": "npm run version:patch && npm run package && npm run publish",
+    "release:minor": "npm run version:minor && npm run package && npm run publish",
+    "release:major": "npm run version:major && npm run package && npm run publish",
+    "release": "npm run release:patch"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "@types/mocha": "^10.0.1",
+    "@types/glob": "^8.1.0",
+    "typescript": "^5.0.0",
+    "@vscode/vsce": "^2.19.0",
+    "@vscode/test-electron": "^2.3.0",
+    "mocha": "^10.2.0",
+    "glob": "^8.1.0"
+  },
+  "extensionPack": [],
+  "extensionDependencies": []
+}

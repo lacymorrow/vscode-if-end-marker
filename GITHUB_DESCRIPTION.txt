@@ -1,0 +1,35 @@
+VS Code If-End Marker - Never lose track of which if statement you're closing
+
+SHORT DESCRIPTION (for GitHub repo):
+🏷️ VS Code extension that displays inline markers showing if conditions at closing braces. Perfect for navigating complex conditional logic in JavaScript/TypeScript.
+
+TOPICS/TAGS:
+vscode-extension
+javascript
+typescript
+productivity
+code-navigation
+developer-tools
+conditional-logic
+inline-hints
+ghost-text
+jsx
+tsx
+
+KEY FEATURES:
+• Shows if conditions at closing braces for multi-line statements
+• Optimized for large codebases with smart caching
+• Theme-aware styling that matches VS Code's UI
+• Fully configurable thresholds and performance settings
+• Supports JS, TS, JSX, TSX, MJS, CJS files
+
+PERFECT FOR:
+• Large monorepos
+• Complex business logic
+• Deep nesting scenarios
+• Long conditional chains
+
+Default settings optimized for medium-large codebases:
+- Only shows markers for if statements spanning 4+ lines
+- Handles files up to 500KB efficiently
+- 300ms debounce for smooth typing experience
