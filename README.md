@@ -1,13 +1,10 @@
-<div align="center">
-  <img src="images/logo.png" alt="If-End Marker Logo" width="128" height="128">
-  
-  # VS Code If-End Marker
-  
-  [![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/shipkit.vscode-if-end-marker?style=for-the-badge&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
-  [![Downloads](https://img.shields.io/visual-studio-marketplace/d/shipkit.vscode-if-end-marker?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
-  [![Rating](https://img.shields.io/visual-studio-marketplace/r/shipkit.vscode-if-end-marker?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
-</div>
+# If End Marker
+
+![Logo](images/logo.png)
+
+[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/shipkit.vscode-if-end-marker)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
+[![Visual Studio Marketplace Downloads](https://img.shields.io/visual-studio-marketplace/d/shipkit.vscode-if-end-marker)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
+[![Visual Studio Marketplace Rating](https://img.shields.io/visual-studio-marketplace/r/shipkit.vscode-if-end-marker)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
 
 > Never lose track of which `if` statement you're closing again! 🎯
 
@@ -258,12 +255,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-<p align="center">
-  Made with ❤️ by <a href="https://shipkit.io">Shipkit</a> • <a href="https://github.com/lacymorrow">Lacy Morrow</a>
-</p>
+Made with ❤️ by [Shipkit](https://shipkit.io) • [Lacy Morrow](https://github.com/lacymorrow)
 
-<p align="center">
-  <a href="https://github.com/lacymorrow/vscode-if-end-marker/issues">Report Bug</a> •
-  <a href="https://github.com/lacymorrow/vscode-if-end-marker/issues">Request Feature</a> •
-  <a href="https://marketplace.visualstudio.com/items?itemName=lacymorrow.vscode-if-end-marker">Rate on Marketplace</a>
-</p>
+[Report Bug](https://github.com/lacymorrow/vscode-if-end-marker/issues) • [Request Feature](https://github.com/lacymorrow/vscode-if-end-marker/issues) • [Rate on Marketplace](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)

@@ -10,7 +10,7 @@ if [ -z "$VSCE_PAT" ]; then
   echo ""
 fi
 
-# Initialize git hooks
+# Initialize git hooks (husky v10)
 npm run prepare
 
 echo ""

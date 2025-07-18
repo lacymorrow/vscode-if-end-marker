@@ -2,7 +2,7 @@
   "name": "vscode-if-end-marker",
   "displayName": "If End Marker",
   "description": "Never lose track of which if statement you're closing! Shows inline markers with the original condition at closing braces in JS/TS files.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "shipkit",
   "author": {
     "name": "Lacy Morrow",
@@ -10,6 +10,7 @@
     "url": "https://shipkit.io"
   },
   "license": "MIT",
+  "private": true,
   "homepage": "https://github.com/lacymorrow/vscode-if-end-marker#readme",
   "repository": {
     "type": "git",
@@ -36,7 +37,7 @@
     "theme": "dark"
   },
   "engines": {
-    "vscode": "^1.74.0"
+    "vscode": "1.102.0"
   },
   "categories": [
     "Programming Languages",
@@ -107,18 +108,17 @@
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
-    "@types/glob": "^8.1.0",
-    "@types/mocha": "^10.0.1",
-    "@types/node": "16.x",
-    "@types/vscode": "^1.74.0",
-    "@vscode/test-electron": "^2.3.0",
-    "@vscode/vsce": "^2.19.0",
-    "glob": "^8.1.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "24.x",
+    "@types/vscode": "^1.102.0",
+    "@vscode/test-electron": "^2.5.2",
+    "@vscode/vsce": "^3.6.0",
+    "glob": "^11.0.3",
     "husky": "^9.1.7",
-    "mocha": "^10.2.0",
+    "mocha": "^11.7.1",
     "semantic-release": "^24.2.7",
     "standard-version": "^9.5.0",
-    "typescript": "^5.0.0"
+    "typescript": "^5.8.3"
   },
   "extensionPack": [],
   "extensionDependencies": []
