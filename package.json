@@ -2,7 +2,7 @@
   "name": "vscode-if-end-marker",
   "displayName": "If End Marker",
   "description": "Never lose track of which if statement you're closing! Shows inline markers with the original condition at closing braces in JS/TS files.",
-  "version": "0.0.2",
+  "version": "0.0.5",
   "publisher": "shipkit",
   "author": {
     "name": "Lacy Morrow",
@@ -37,7 +37,7 @@
     "theme": "dark"
   },
   "engines": {
-    "vscode": "1.102.0"
+    "vscode": "^1.74.0"
   },
   "categories": [
     "Programming Languages",
@@ -55,29 +55,29 @@
     "configuration": {
       "title": "If End Marker",
       "properties": {
-        "ifEndGhostText.maxConditionLength": {
+        "vscodeIfEndMarker.maxConditionLength": {
           "type": "number",
           "default": 50,
           "description": "Maximum number of characters to display from the condition"
         },
-        "ifEndGhostText.enabled": {
+        "vscodeIfEndMarker.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Enable/disable if-end markers"
         },
-        "ifEndGhostText.maxFileSize": {
+        "vscodeIfEndMarker.maxFileSize": {
           "type": "number",
           "default": 500000,
           "description": "Maximum file size (in characters) to process. Larger files will be skipped for performance."
         },
-        "ifEndGhostText.debounceDelay": {
+        "vscodeIfEndMarker.debounceDelay": {
           "type": "number",
           "default": 300,
           "minimum": 50,
           "maximum": 1000,
           "description": "Delay in milliseconds before updating markers after text changes"
         },
-        "ifEndGhostText.minLineCount": {
+        "vscodeIfEndMarker.minLineCount": {
           "type": "number",
           "default": 4,
           "minimum": 2,
@@ -110,7 +110,7 @@
     "@semantic-release/git": "^10.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "24.x",
-    "@types/vscode": "^1.102.0",
+    "@types/vscode": "^1.74.0",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.6.0",
     "glob": "^11.0.3",

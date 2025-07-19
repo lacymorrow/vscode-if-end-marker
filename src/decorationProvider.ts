@@ -45,7 +45,7 @@ export class IfStatementDecorationProvider {
         this.lastEditor = editor;
         
         // Get extension configuration
-        const config = vscode.workspace.getConfiguration('ifEndGhostText');
+        const config = vscode.workspace.getConfiguration('vscodeIfEndMarker');
         const enabled = config.get<boolean>('enabled', true);
         
         // Clear decorations if disabled or unsupported language
@@ -170,7 +170,7 @@ export class IfStatementDecorationProvider {
     private shouldShowDecoration(ifStmt: IfStatement, document: vscode.TextDocument): boolean {
         // Only show markers for if statements that span multiple lines
         // This avoids cluttering short if statements
-        const config = vscode.workspace.getConfiguration('ifEndGhostText');
+        const config = vscode.workspace.getConfiguration('vscodeIfEndMarker');
         const minLineCount = config.get<number>('minLineCount', 3);
         const lineCount = ifStmt.endLine - ifStmt.startLine;
         return lineCount >= minLineCount;

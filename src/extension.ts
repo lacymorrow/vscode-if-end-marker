@@ -16,7 +16,7 @@ export function activate(context: vscode.ExtensionContext) {
     
     // Get performance configuration
     const getDebounceDelay = () => {
-        const config = vscode.workspace.getConfiguration('ifEndGhostText');
+        const config = vscode.workspace.getConfiguration('vscodeIfEndMarker');
         return config.get<number>('debounceDelay', 250);
     };
     
@@ -54,7 +54,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
         // Update decorations when configuration settings change
         vscode.workspace.onDidChangeConfiguration(event => {
-            if (event.affectsConfiguration('ifEndGhostText')) {
+            if (event.affectsConfiguration('vscodeIfEndMarker')) {
                 const editor = vscode.window.activeTextEditor;
                 if (editor) {
                     provider.updateDecorations(editor);

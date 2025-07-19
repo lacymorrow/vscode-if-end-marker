@@ -1,13 +1,13 @@
 <div align="center">
   <img src="images/logo.png" alt="If-End Marker Logo" width="128" height="128">
-  
-  # VS Code If-End Marker
-  
-  [![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/shipkit.vscode-if-end-marker?style=for-the-badge&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
-  [![Downloads](https://img.shields.io/visual-studio-marketplace/d/shipkit.vscode-if-end-marker?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
-  [![Rating](https://img.shields.io/visual-studio-marketplace/r/shipkit.vscode-if-end-marker?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 </div>
+
+# VS Code If-End Marker
+
+[![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/shipkit.vscode-if-end-marker?style=for-the-badge&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
+[![Downloads](https://img.shields.io/visual-studio-marketplace/d/shipkit.vscode-if-end-marker?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
+[![Rating](https://img.shields.io/visual-studio-marketplace/r/shipkit.vscode-if-end-marker?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 > Never lose track of which `if` statement you're closing again! 🎯
 
@@ -102,21 +102,21 @@ Configure the extension through VS Code settings (`Ctrl+,` / `Cmd+,`):
 
 | Setting | Type | Default | Description |
 |---------|------|---------|-------------|
-| `ifEndGhostText.enabled` | boolean | `true` | Enable/disable the extension |
-| `ifEndGhostText.maxConditionLength` | number | `50` | Maximum characters to display from the condition |
-| `ifEndGhostText.maxFileSize` | number | `500000` | Maximum file size (in characters) to process |
-| `ifEndGhostText.debounceDelay` | number | `300` | Delay in milliseconds before updating decorations |
-| `ifEndGhostText.minLineCount` | number | `4` | Minimum lines an if statement must span |
+| `vscodeIfEndMarker.enabled` | boolean | `true` | Enable/disable the extension |
+| `vscodeIfEndMarker.maxConditionLength` | number | `50` | Maximum characters to display from the condition |
+| `vscodeIfEndMarker.maxFileSize` | number | `500000` | Maximum file size (in characters) to process |
+| `vscodeIfEndMarker.debounceDelay` | number | `300` | Delay in milliseconds before updating decorations |
+| `vscodeIfEndMarker.minLineCount` | number | `4` | Minimum lines an if statement must span |
 
 ### Example Configuration
 
 ```json
 {
-  "ifEndGhostText.enabled": true,
-  "ifEndGhostText.maxConditionLength": 60,
-  "ifEndGhostText.maxFileSize": 1000000,
-  "ifEndGhostText.debounceDelay": 400,
-  "ifEndGhostText.minLineCount": 3
+  "vscodeIfEndMarker.enabled": true,
+  "vscodeIfEndMarker.maxConditionLength": 60,
+  "vscodeIfEndMarker.maxFileSize": 1000000,
+  "vscodeIfEndMarker.debounceDelay": 400,
+  "vscodeIfEndMarker.minLineCount": 3
 }
 ```
 
@@ -229,7 +229,7 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 ### Performance issues
 
 If you experience performance issues with large files:
-1. Consider increasing `ifEndGhostText.maxFileSize`
+1. Consider increasing `vscodeIfEndMarker.maxFileSize`
 2. Temporarily disable the extension for very large files
 3. Report the issue with file details
 
