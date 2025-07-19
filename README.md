@@ -84,6 +84,14 @@ if (user.isAuthenticated &&
 
 The extension activates automatically when you open JavaScript or TypeScript files. Markers will appear at the end of if statements that span multiple lines.
 
+### Command Palette Commands
+
+Access these commands through the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
+
+- **If-End Marker: Toggle Markers** - Toggle the extension on/off
+- **If-End Marker: Enable Markers** - Enable the extension
+- **If-End Marker: Disable Markers** - Disable the extension
+
 ### Example
 
 ```javascript

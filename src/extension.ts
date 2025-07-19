@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { IfStatementDecorationProvider } from './decorationProvider';
+import { CONFIG_NAMESPACE, CONFIG_KEYS, CONFIG_DEFAULTS, COMMANDS, UI_TEXT } from './config';
 
 /**
  * Activates the extension when VS Code loads it.
@@ -16,8 +17,8 @@ export function activate(context: vscode.ExtensionContext) {
     
     // Get performance configuration
     const getDebounceDelay = () => {
-        const config = vscode.workspace.getConfiguration('vscodeIfEndMarker');
-        return config.get<number>('debounceDelay', 250);
+        const config = vscode.workspace.getConfiguration(CONFIG_NAMESPACE);
+        return config.get<number>(CONFIG_KEYS.DEBOUNCE_DELAY, CONFIG_DEFAULTS.DEBOUNCE_DELAY);
     };
     
     // Register event listeners and combine them into a single disposable
@@ -54,7 +55,7 @@ export function activate(context: vscode.ExtensionContext) {
         }),
         // Update decorations when configuration settings change
         vscode.workspace.onDidChangeConfiguration(event => {
-            if (event.affectsConfiguration('vscodeIfEndMarker')) {
+            if (event.affectsConfiguration(CONFIG_NAMESPACE)) {
                 const editor = vscode.window.activeTextEditor;
                 if (editor) {
                     provider.updateDecorations(editor);
@@ -75,7 +76,7 @@ export function activate(context: vscode.ExtensionContext) {
                 updateTimer = setTimeout(() => {
                     provider.updateDecorations(event.textEditor);
                     updateTimer = undefined;
-                }, 50);
+                }, CONFIG_DEFAULTS.VIEWPORT_UPDATE_DELAY);
             }
         })
     );
@@ -87,6 +88,34 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push({
         dispose: () => provider.dispose()
     });
+
+    // Register commands
+    context.subscriptions.push(
+        vscode.commands.registerCommand(COMMANDS.TOGGLE, () => {
+            const config = vscode.workspace.getConfiguration(CONFIG_NAMESPACE);
+            const currentEnabled = config.get<boolean>(CONFIG_KEYS.ENABLED, CONFIG_DEFAULTS.ENABLED);
+            config.update(CONFIG_KEYS.ENABLED, !currentEnabled, vscode.ConfigurationTarget.Global)
+                .then(() => {
+                    vscode.window.showInformationMessage(
+                        UI_TEXT.MARKERS_TOGGLED(!currentEnabled)
+                    );
+                });
+        }),
+        vscode.commands.registerCommand(COMMANDS.ENABLE, () => {
+            const config = vscode.workspace.getConfiguration(CONFIG_NAMESPACE);
+            config.update(CONFIG_KEYS.ENABLED, true, vscode.ConfigurationTarget.Global)
+                .then(() => {
+                    vscode.window.showInformationMessage(UI_TEXT.MARKERS_ENABLED);
+                });
+        }),
+        vscode.commands.registerCommand(COMMANDS.DISABLE, () => {
+            const config = vscode.workspace.getConfiguration(CONFIG_NAMESPACE);
+            config.update(CONFIG_KEYS.ENABLED, false, vscode.ConfigurationTarget.Global)
+                .then(() => {
+                    vscode.window.showInformationMessage(UI_TEXT.MARKERS_DISABLED);
+                });
+        })
+    );
 
     // Initialize decorations for the currently active editor (if any)
     if (vscode.window.activeTextEditor) {

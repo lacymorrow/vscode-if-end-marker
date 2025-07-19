@@ -84,7 +84,21 @@
           "description": "Minimum number of lines an if statement must span to show markers"
         }
       }
-    }
+    },
+    "commands": [
+      {
+        "command": "vscodeIfEndMarker.toggle",
+        "title": "If-End Marker: Toggle Markers"
+      },
+      {
+        "command": "vscodeIfEndMarker.enable",
+        "title": "If-End Marker: Enable Markers"
+      },
+      {
+        "command": "vscodeIfEndMarker.disable",
+        "title": "If-End Marker: Disable Markers"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile && npm run lint",

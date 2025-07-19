@@ -1,3 +1,5 @@
+import { CONFIG_DEFAULTS } from './config';
+
 /**
  * Represents a parsed if statement with its location and condition information.
  */
@@ -73,9 +75,9 @@ export class ASTParser {
         if (lines[startLine].includes('{')) {
             foundOpenBrace = true;
         } else {
-            // Look for opening brace on following lines (up to 5 lines)
+            // Look for opening brace on following lines
             // This handles cases where the brace is on a new line
-            for (let i = startLine + 1; i < lines.length && i < startLine + 5; i++) {
+            for (let i = startLine + 1; i < lines.length && i < startLine + CONFIG_DEFAULTS.MAX_BRACE_SEARCH_LINES; i++) {
                 if (lines[i].includes('{')) {
                     blockStartLine = i;
                     foundOpenBrace = true;
@@ -158,7 +160,7 @@ export class ASTParser {
         let startedCondition = false;
         
         // Extract condition by tracking parentheses
-        for (let i = startLine; i < lines.length && i < startLine + 10; i++) { // Limit search to 10 lines
+        for (let i = startLine; i < lines.length && i < startLine + CONFIG_DEFAULTS.MAX_CONDITION_SEARCH_LINES; i++) {
             const currentLine = lines[i];
             const startChar = i === startLine ? conditionStart : 0;
             const endChar = currentLine.length;

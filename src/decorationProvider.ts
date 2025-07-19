@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { ASTParser, IfStatement } from './parser';
+import { CONFIG_NAMESPACE, CONFIG_KEYS, CONFIG_DEFAULTS, SUPPORTED_LANGUAGES } from './config';
 
 /**
  * Provides decoration functionality for displaying if statement conditions
@@ -45,8 +46,8 @@ export class IfStatementDecorationProvider {
         this.lastEditor = editor;
         
         // Get extension configuration
-        const config = vscode.workspace.getConfiguration('vscodeIfEndMarker');
-        const enabled = config.get<boolean>('enabled', true);
+        const config = vscode.workspace.getConfiguration(CONFIG_NAMESPACE);
+        const enabled = config.get<boolean>(CONFIG_KEYS.ENABLED, CONFIG_DEFAULTS.ENABLED);
         
         // Clear decorations if disabled or unsupported language
         if (!enabled || !this.isSupported(editor.document.languageId)) {
@@ -56,7 +57,7 @@ export class IfStatementDecorationProvider {
 
         // Skip large files for performance
         const document = editor.document;
-        const maxFileSize = config.get<number>('maxFileSize', 100000);
+        const maxFileSize = config.get<number>(CONFIG_KEYS.MAX_FILE_SIZE, CONFIG_DEFAULTS.MAX_FILE_SIZE);
         if (document.getText().length > maxFileSize) {
             editor.setDecorations(this.decorationType, []);
             return;
@@ -76,7 +77,7 @@ export class IfStatementDecorationProvider {
             ifStatements = this.parser.parse(text, document.languageId);
             
             // Limit cache size to prevent memory issues
-            if (this.parseCache.size > 50) {
+            if (this.parseCache.size > CONFIG_DEFAULTS.MAX_CACHE_SIZE) {
                 // Remove oldest entries
                 const firstKey = this.parseCache.keys().next().value;
                 if (firstKey) this.parseCache.delete(firstKey);
@@ -111,14 +112,7 @@ export class IfStatementDecorationProvider {
      * @returns True if the language is supported, false otherwise
      */
     private isSupported(languageId: string): boolean {
-        // List of supported language identifiers
-        const supportedLanguages = [
-            'javascript',      // .js, .mjs, .cjs
-            'typescript',      // .ts
-            'javascriptreact', // .jsx
-            'typescriptreact'  // .tsx
-        ];
-        return supportedLanguages.includes(languageId);
+        return SUPPORTED_LANGUAGES.includes(languageId as any);
     }
 
     /**
@@ -135,7 +129,7 @@ export class IfStatementDecorationProvider {
         config: vscode.WorkspaceConfiguration
     ): vscode.DecorationOptions[] {
         const decorations: vscode.DecorationOptions[] = [];
-        const maxLength = config.get<number>('maxConditionLength', 40);
+        const maxLength = config.get<number>(CONFIG_KEYS.MAX_CONDITION_LENGTH, CONFIG_DEFAULTS.MAX_CONDITION_LENGTH);
 
         // Process each if statement
         for (const ifStmt of ifStatements) {
@@ -170,8 +164,8 @@ export class IfStatementDecorationProvider {
     private shouldShowDecoration(ifStmt: IfStatement, document: vscode.TextDocument): boolean {
         // Only show markers for if statements that span multiple lines
         // This avoids cluttering short if statements
-        const config = vscode.workspace.getConfiguration('vscodeIfEndMarker');
-        const minLineCount = config.get<number>('minLineCount', 3);
+        const config = vscode.workspace.getConfiguration(CONFIG_NAMESPACE);
+        const minLineCount = config.get<number>(CONFIG_KEYS.MIN_LINE_COUNT, CONFIG_DEFAULTS.MIN_LINE_COUNT);
         const lineCount = ifStmt.endLine - ifStmt.startLine;
         return lineCount >= minLineCount;
     }
