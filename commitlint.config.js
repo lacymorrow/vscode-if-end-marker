@@ -16,6 +16,7 @@ module.exports = {
         'revert',   // Reverts a previous commit
         'ci'        // CI configuration changes
       ]
-    ]
+    ],
+    'body-max-line-length': [2, 'always', 200] // Allow longer lines for GitHub URLs in release commits
   }
 };
