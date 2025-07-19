@@ -8,8 +8,8 @@ npm run compile
 # Package the extension
 npx vsce package --no-dependencies --allow-missing-repository
 
-# Find the generated .vsix file
-VSIX_FILE=$(ls *.vsix | head -n 1)
+# Find the generated .vsix file with highest version
+VSIX_FILE=$(ls *.vsix | sort -V | tail -n 1)
 
 if [ -z "$VSIX_FILE" ]; then
     echo "Error: No .vsix file found!"
@@ -19,7 +19,7 @@ fi
 echo "Installing $VSIX_FILE..."
 
 # Install the extension
-code --install-extension "$VSIX_FILE"
+cursor --install-extension "$VSIX_FILE"
  
 echo "Installation complete! Restart VS Code to activate the extension."
 echo ""
