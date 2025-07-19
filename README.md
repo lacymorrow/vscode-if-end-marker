@@ -13,6 +13,8 @@
 
 A lightweight VS Code extension that displays subtle, inline markers showing the condition of `if` statements at their closing braces. Perfect for navigating complex conditional logic in JavaScript and TypeScript projects.
 
+![Demo](images/demo.gif)
+
 ![Extension Screenshot](images/screenshot.png)
 
 ## ✨ Why If-End Marker?
