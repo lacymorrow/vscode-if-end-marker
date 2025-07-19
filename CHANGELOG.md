@@ -1,3 +1,10 @@
+# [0.2.0](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.1.0...v0.2.0) (2025-07-19)
+
+
+### Features
+
+* config ([b598e58](https://github.com/lacymorrow/vscode-if-end-marker/commit/b598e58530d970814a8784c409f03b10fb2953f5))
+
 # [0.1.0](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.0.4...v0.1.0) (2025-07-19)
 
 
