@@ -10,7 +10,7 @@ TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 EMPTY_BRANCH="empty-base-$TIMESTAMP"
 FEATURE_BRANCH="full-review-$TIMESTAMP"
 MAIN_BRANCH="main"
-CLEANUP=true
+CLEANUP_MODE=false
 
 # Help message
 show_help() {
@@ -22,8 +22,45 @@ show_help() {
     echo "Options:"
     echo "  -e, --empty-branch NAME    Base name for empty branch (will be appended with timestamp)"
     echo "  -f, --feature-branch NAME  Base name for feature branch (will be appended with timestamp)"
-    echo "  --no-cleanup              Keep temporary branches after PR creation"
+    echo "  --cleanup                 Delete all existing code review branches (full-review-* and empty-base-*)"
     echo "  -h, --help                Show this help message"
+    exit 0
+}
+
+# Function to cleanup all code review branches
+cleanup_all_branches() {
+    echo "Cleaning up all code review branches..."
+    
+    # Get current branch to return to it later
+    CURRENT_BRANCH=$(git symbolic-ref --short HEAD || echo "HEAD")
+    
+    # Switch to main branch for cleanup
+    git checkout "$MAIN_BRANCH"
+    
+    # Find and delete local branches matching pattern
+    echo "Deleting local branches..."
+    for branch in $(git branch --format='%(refname:short)' | grep -E '^(full-review-|empty-base-)' || true); do
+        if [ -n "$branch" ]; then
+            echo "  Deleting local branch: $branch"
+            git branch -D "$branch"
+        fi
+    done
+    
+    # Find and delete remote branches matching pattern
+    echo "Deleting remote branches..."
+    for branch in $(git ls-remote --heads origin | grep -E '(full-review-|empty-base-)' | awk '{print $2}' | sed 's|refs/heads/||' || true); do
+        if [ -n "$branch" ]; then
+            echo "  Deleting remote branch: $branch"
+            git push origin --delete "$branch"
+        fi
+    done
+    
+    # Return to original branch if it still exists
+    if git show-ref --verify --quiet "refs/heads/$CURRENT_BRANCH"; then
+        git checkout "$CURRENT_BRANCH"
+    fi
+    
+    echo "Cleanup completed!"
     exit 0
 }
 
@@ -44,8 +81,8 @@ while [[ $# -gt 0 ]]; do
             FEATURE_BRANCH="$2-$TIMESTAMP"
             shift 2
             ;;
-        --no-cleanup)
-            CLEANUP=false
+        --cleanup)
+            CLEANUP_MODE=true
             shift
             ;;
         -h|--help)
@@ -57,6 +94,11 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# If cleanup mode, run cleanup and exit
+if [ "$CLEANUP_MODE" = true ]; then
+    cleanup_all_branches
+fi
 
 # Check if gh CLI is installed
 if ! command -v gh &> /dev/null; then
@@ -82,30 +124,6 @@ remote_branch_exists() {
     git ls-remote --exit-code --heads origin "$1" &> /dev/null
 }
 
-# Cleanup function
-cleanup() {
-    if [ "$CLEANUP" = true ]; then
-        echo "Cleaning up temporary branches..."
-        git checkout "$MAIN_BRANCH"
-        
-        # Delete local branches
-        if branch_exists "$EMPTY_BRANCH"; then
-            git branch -D "$EMPTY_BRANCH"
-        fi
-        if branch_exists "$FEATURE_BRANCH"; then
-            git branch -D "$FEATURE_BRANCH"
-        fi
-        
-        # Delete remote branches
-        if remote_branch_exists "$EMPTY_BRANCH"; then
-            git push origin --delete "$EMPTY_BRANCH"
-        fi
-        if remote_branch_exists "$FEATURE_BRANCH"; then
-            git push origin --delete "$FEATURE_BRANCH"
-        fi
-    fi
-}
-
 # Store current branch
 ORIGINAL_BRANCH=$(git symbolic-ref --short HEAD || echo "HEAD")
 
@@ -113,6 +131,7 @@ echo "Starting code review automation process..."
 echo "Using source branch: $MAIN_BRANCH"
 echo "Empty branch: $EMPTY_BRANCH"
 echo "Feature branch: $FEATURE_BRANCH"
+echo "Branches will be kept after PR creation (use --cleanup to remove all code review branches)"
 
 # Check if we're in a git repository
 if ! git rev-parse --is-inside-work-tree &> /dev/null; then
@@ -166,11 +185,15 @@ PR_URL=$(gh pr create \
     --body "This PR is created to trigger a full codebase review by comparing against an empty branch.")
 
 echo "Process completed! PR created at: $PR_URL"
+echo ""
+echo "Branches created:"
+echo "  - $EMPTY_BRANCH"
+echo "  - $FEATURE_BRANCH"
+echo ""
+echo "To cleanup all code review branches later, run:"
+echo "  $0 --cleanup"
 
 # Return to original branch
 git checkout "$ORIGINAL_BRANCH"
-
-# Cleanup if requested
-cleanup
 
 echo "Done!" 
