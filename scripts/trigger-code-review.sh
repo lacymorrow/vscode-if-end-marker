@@ -126,21 +126,9 @@ if ! branch_exists "$MAIN_BRANCH"; then
     exit 1
 fi
 
-# Create feature branch from main first
-if branch_exists "$FEATURE_BRANCH" || remote_branch_exists "$FEATURE_BRANCH"; then
-    echo "Error: Branch '$FEATURE_BRANCH' already exists. Please delete it first or use a different name."
-    exit 1
-fi
-
-echo "Creating feature branch..."
-git checkout "$MAIN_BRANCH"
-git checkout -b "$FEATURE_BRANCH"
-git push origin "$FEATURE_BRANCH"
-
-# Now create empty branch from main (not orphan)
+# Create empty branch from main first
 if branch_exists "$EMPTY_BRANCH" || remote_branch_exists "$EMPTY_BRANCH"; then
     echo "Error: Branch '$EMPTY_BRANCH' already exists. Please delete it first or use a different name."
-    git checkout "$ORIGINAL_BRANCH"
     exit 1
 fi
 
@@ -152,6 +140,22 @@ find . -mindepth 1 -maxdepth 1 -not -name '.git' -exec rm -rf {} +
 git add -A
 git commit -m "Empty state for code review"
 git push origin "$EMPTY_BRANCH"
+
+# Create feature branch from main
+if branch_exists "$FEATURE_BRANCH" || remote_branch_exists "$FEATURE_BRANCH"; then
+    echo "Error: Branch '$FEATURE_BRANCH' already exists. Please delete it first or use a different name."
+    git checkout "$ORIGINAL_BRANCH"
+    exit 1
+fi
+
+echo "Creating feature branch..."
+git checkout "$MAIN_BRANCH"
+git checkout -b "$FEATURE_BRANCH"
+# Add a marker file to ensure there's a commit difference
+echo "# Code review marker - created at $TIMESTAMP" > .code-review-marker
+git add .code-review-marker
+git commit -m "Add code review marker"
+git push origin "$FEATURE_BRANCH"
 
 # Create pull request using GitHub CLI
 echo "Creating pull request..."
