@@ -31,6 +31,16 @@ show_help() {
 cleanup_all_branches() {
     echo "Cleaning up all code review branches..."
     
+    # Check for uncommitted changes before cleanup
+    CLEANUP_STASH_CREATED=false
+    if ! git diff --quiet || ! git diff --cached --quiet; then
+        echo "Warning: You have uncommitted changes."
+        echo "Stashing changes to prevent data loss during cleanup..."
+        git stash push -m "Auto-stash before cleanup - $(date)"
+        CLEANUP_STASH_CREATED=true
+        echo "Changes stashed successfully."
+    fi
+    
     # Get current branch to return to it later
     CURRENT_BRANCH=$(git symbolic-ref --short HEAD || echo "HEAD")
     
@@ -58,6 +68,13 @@ cleanup_all_branches() {
     # Return to original branch if it still exists
     if git show-ref --verify --quiet "refs/heads/$CURRENT_BRANCH"; then
         git checkout "$CURRENT_BRANCH"
+    fi
+    
+    # Restore stashed changes if any were stashed
+    if [ "$CLEANUP_STASH_CREATED" = true ]; then
+        echo "Restoring your stashed changes..."
+        git stash pop
+        echo "Changes restored successfully."
     fi
     
     echo "Cleanup completed!"
@@ -139,6 +156,16 @@ if ! git rev-parse --is-inside-work-tree &> /dev/null; then
     exit 1
 fi
 
+# Check for uncommitted changes
+STASH_CREATED=false
+if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "Warning: You have uncommitted changes."
+    echo "Stashing changes to prevent data loss..."
+    git stash push -m "Auto-stash before code review automation - $(date)"
+    STASH_CREATED=true
+    echo "Changes stashed successfully."
+fi
+
 # Check if main branch exists
 if ! branch_exists "$MAIN_BRANCH"; then
     echo "Error: Branch '$MAIN_BRANCH' does not exist"
@@ -195,5 +222,12 @@ echo "  $0 --cleanup"
 
 # Return to original branch
 git checkout "$ORIGINAL_BRANCH"
+
+# Restore stashed changes if any were stashed
+if [ "$STASH_CREATED" = true ]; then
+    echo "Restoring your stashed changes..."
+    git stash pop
+    echo "Changes restored successfully."
+fi
 
 echo "Done!" 
