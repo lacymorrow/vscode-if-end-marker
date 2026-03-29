@@ -11,7 +11,7 @@
 
 > Never lose track of which `if` statement you're closing again! 🎯
 
-A lightweight VS Code extension that displays subtle, inline markers showing the condition of `if` statements at their closing braces. Perfect for navigating complex conditional logic in JavaScript and TypeScript projects.
+A lightweight VS Code extension that displays subtle, inline markers showing the condition of `if` statements at their closing braces. Perfect for navigating complex conditional logic in JavaScript, TypeScript, C, and C++ projects.
 
 ![Demo](images/demo.gif)
 
@@ -39,7 +39,7 @@ if (user.isAuthenticated &&
 - **🎨 Theme Integration**: Markers adapt to your VS Code theme using native inlay hint colors
 - **⚡ Blazing Fast**: Optimized for large codebases with smart caching and viewport rendering
 - **🛠️ Fully Configurable**: Customize when and how markers appear
-- **📝 Multi-language Support**: Works with JS, TS, JSX, TSX, MJS, and CJS files
+- **📝 Multi-language Support**: Works with JS, TS, JSX, TSX, MJS, CJS, C, and C++ files
 
 ## 📦 Installation
 
@@ -84,7 +84,7 @@ if (user.isAuthenticated &&
 
 ## 💡 Usage
 
-The extension activates automatically when you open JavaScript or TypeScript files. Markers will appear at the end of if statements that span multiple lines.
+The extension activates automatically when you open JavaScript, TypeScript, C, or C++ files. Markers will appear at the end of if statements that span multiple lines.
 
 ### Command Palette Commands
 
@@ -233,7 +233,7 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 
 1. Check if the extension is enabled in settings
 2. Ensure your if statement spans at least 4 lines (configurable)
-3. Verify the file type is supported (JS/TS/JSX/TSX)
+3. Verify the file type is supported (JS/TS/JSX/TSX/C/C++)
 4. Try reloading VS Code (`Ctrl+R` / `Cmd+R`)
 
 ### Performance issues

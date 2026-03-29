@@ -56,7 +56,9 @@ export const SUPPORTED_LANGUAGES = [
     'javascript',      // .js, .mjs, .cjs
     'typescript',      // .ts
     'javascriptreact', // .jsx
-    'typescriptreact'  // .tsx
+    'typescriptreact', // .tsx
+    'c',               // .c, .h
+    'cpp'              // .cpp, .cc, .cxx, .hpp
 ] as const;
 
 /** UI text constants */
