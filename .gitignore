@@ -49,4 +49,4 @@ coverage/
 .cache/
 
 # Generated files
-CHANGELOG.md
+CHANGELOG.md.vscode-test/

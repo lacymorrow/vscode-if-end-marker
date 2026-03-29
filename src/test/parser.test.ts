@@ -180,6 +180,28 @@ if (argc > 1) {
         assert.strictEqual(results[1].endLine, 4);
     });
 
+    test('Should handle parentheses inside string and char literals', () => {
+        const code = `
+if (c == '(') {
+    printf("matched (paren)");
+}`;
+        const results = parser.parse(code, 'c');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, "c == '('");
+    });
+
+    test('Should handle parentheses inside double-quoted strings', () => {
+        const code = `
+if (str.find("(test)") != std::string::npos) {
+    process();
+}`;
+        const results = parser.parse(code, 'cpp');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, 'str.find("(test)") != std::string::npos');
+    });
+
     test('Should parse C/C++ if/else if/else chains', () => {
         const code = `
 if (status == 0) {

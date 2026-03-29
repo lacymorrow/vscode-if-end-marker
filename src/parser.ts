@@ -176,10 +176,43 @@ export class ASTParser {
             // Extract relevant portion of the line
             let lineSegment = currentLine.substring(startChar, endChar);
             
-            // Process the line segment
+            // Process the line segment, skipping parens inside strings/chars
             for (let j = 0; j < lineSegment.length; j++) {
                 const char = lineSegment[j];
-                
+
+                // Skip string literals (double quotes)
+                if (char === '"') {
+                    if (startedCondition) { conditionParts.push(char); }
+                    j++;
+                    while (j < lineSegment.length) {
+                        const sc = lineSegment[j];
+                        if (startedCondition) { conditionParts.push(sc); }
+                        if (sc === '\\') { j++; if (j < lineSegment.length && startedCondition) { conditionParts.push(lineSegment[j]); } }
+                        else if (sc === '"') { break; }
+                        j++;
+                    }
+                    continue;
+                }
+
+                // Skip character literals (single quotes)
+                if (char === '\'') {
+                    if (startedCondition) { conditionParts.push(char); }
+                    j++;
+                    while (j < lineSegment.length) {
+                        const sc = lineSegment[j];
+                        if (startedCondition) { conditionParts.push(sc); }
+                        if (sc === '\\') { j++; if (j < lineSegment.length && startedCondition) { conditionParts.push(lineSegment[j]); } }
+                        else if (sc === '\'') { break; }
+                        j++;
+                    }
+                    continue;
+                }
+
+                // Skip single-line comments
+                if (char === '/' && j + 1 < lineSegment.length && lineSegment[j + 1] === '/') {
+                    break; // rest of line is a comment
+                }
+
                 if (char === '(') {
                     parenCount++;
                     startedCondition = true;
