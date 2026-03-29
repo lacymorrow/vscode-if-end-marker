@@ -139,5 +139,8 @@
     "typescript": "^5.8.3"
   },
   "extensionPack": [],
-  "extensionDependencies": []
+  "extensionDependencies": [],
+  "funding": {
+    "url": "https://github.com/sponsors/lacymorrow"
+  }
 }
