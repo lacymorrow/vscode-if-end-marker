@@ -12,6 +12,8 @@ suite('ASTParser Test Suite', () => {
         parser = new ASTParser();
     });
 
+    // --- Basic parsing ---
+
     test('Should parse simple if statement', () => {
         const code = `
 if (condition) {
@@ -125,11 +127,101 @@ if (condition)
         const results = parser.parse(code, 'javascript');
 
         assert.strictEqual(results.length, 1);
-        assert.strictEqual(results[0].startColumn, 4); // Position of 'if'
-        assert.strictEqual(results[0].endColumn, 5); // Position after '}'
+        assert.strictEqual(results[0].startColumn, 4);
+        assert.strictEqual(results[0].endColumn, 5);
     });
 
-    // C/C++ specific tests
+    // --- String/char/template literal handling ---
+
+    test('Should handle parentheses inside string and char literals', () => {
+        const code = `
+if (c == '(') {
+    printf("matched (paren)");
+}`;
+        const results = parser.parse(code, 'c');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, "c == '('");
+    });
+
+    test('Should handle parentheses inside double-quoted strings', () => {
+        const code = `
+if (str.find("(test)") != std::string::npos) {
+    process();
+}`;
+        const results = parser.parse(code, 'cpp');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, 'str.find("(test)") != std::string::npos');
+    });
+
+    test('Should handle template literals with parens in conditions', () => {
+        const code = "if (`(${x})` === expected) {\n    run();\n}";
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.ok(results[0].condition.includes('`'));
+    });
+
+    test('Should handle escaped quotes in strings', () => {
+        const code = `
+if (str === "it\\'s a \\"test\\"") {
+    run();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+    });
+
+    // --- Brace counting with strings/comments ---
+
+    test('Should not count braces inside string literals in body', () => {
+        const code = `
+if (condition) {
+    const obj = "{ fake }";
+    const arr = "[ also fake ]";
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].endLine, 4);
+    });
+
+    test('Should not count braces inside single-line comments', () => {
+        const code = `
+if (condition) {
+    // this brace { doesn't count
+    doStuff();
+    // neither does this one }
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].endLine, 5);
+    });
+
+    test('Should not count braces inside block comments', () => {
+        const code = `
+if (condition) {
+    /* this brace { doesn't count */
+    doStuff();
+    /* } */
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].endLine, 5);
+    });
+
+    test('Should not count braces inside template literals in body', () => {
+        const code = "if (condition) {\n    const s = `template with { braces }`;\n    run();\n}";
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].endLine, 3);
+    });
+
+    // --- C/C++ specific ---
 
     test('Should parse C/C++ if statement with C types', () => {
         const code = `
@@ -180,28 +272,6 @@ if (argc > 1) {
         assert.strictEqual(results[1].endLine, 4);
     });
 
-    test('Should handle parentheses inside string and char literals', () => {
-        const code = `
-if (c == '(') {
-    printf("matched (paren)");
-}`;
-        const results = parser.parse(code, 'c');
-
-        assert.strictEqual(results.length, 1);
-        assert.strictEqual(results[0].condition, "c == '('");
-    });
-
-    test('Should handle parentheses inside double-quoted strings', () => {
-        const code = `
-if (str.find("(test)") != std::string::npos) {
-    process();
-}`;
-        const results = parser.parse(code, 'cpp');
-
-        assert.strictEqual(results.length, 1);
-        assert.strictEqual(results[0].condition, 'str.find("(test)") != std::string::npos');
-    });
-
     test('Should parse C/C++ if/else if/else chains', () => {
         const code = `
 if (status == 0) {
@@ -217,5 +287,88 @@ if (status == 0) {
         assert.strictEqual(results[0].condition, 'status == 0');
         assert.strictEqual(results[1].condition, 'status == 1');
         assert.strictEqual(results[2].condition, 'status < 0');
+    });
+
+    // --- Edge cases ---
+
+    test('Should handle empty code', () => {
+        const results = parser.parse('', 'javascript');
+        assert.strictEqual(results.length, 0);
+    });
+
+    test('Should handle code with only whitespace', () => {
+        const results = parser.parse('   \n  \n   ', 'javascript');
+        assert.strictEqual(results.length, 0);
+    });
+
+    test('Should handle deeply nested if statements', () => {
+        const code = `
+if (a) {
+    if (b) {
+        if (c) {
+            if (d) {
+                run();
+            }
+        }
+    }
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 4);
+        assert.strictEqual(results[0].condition, 'a');
+        assert.strictEqual(results[3].condition, 'd');
+    });
+
+    test('Should handle if with no body content', () => {
+        const code = `
+if (flag) {
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, 'flag');
+    });
+
+    test('Should handle multiple independent if blocks', () => {
+        const code = `
+if (a) {
+    doA();
+}
+
+if (b) {
+    doB();
+}
+
+if (c) {
+    doC();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 3);
+        assert.strictEqual(results[0].condition, 'a');
+        assert.strictEqual(results[1].condition, 'b');
+        assert.strictEqual(results[2].condition, 'c');
+    });
+
+    test('Should handle JSX-like syntax in conditions', () => {
+        const code = `
+if (props.children && Array.isArray(props.children)) {
+    return <div>{children}</div>;
+}`;
+        const results = parser.parse(code, 'typescriptreact');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, 'props.children && Array.isArray(props.children)');
+    });
+
+    test('Should handle condition with ternary operator', () => {
+        const code = `
+if (x ? true : false) {
+    run();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, 'x ? true : false');
     });
 });

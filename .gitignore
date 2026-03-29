@@ -50,3 +50,4 @@ coverage/
 
 # Generated files
 CHANGELOG.md.vscode-test/
+.vscode-test/

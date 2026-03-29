@@ -35,13 +35,10 @@ export class ASTParser {
         const ifStatements: IfStatement[] = [];
         const lines = code.split('\n');
         
-        // Iterate through each line to find if statements
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const trimmedLine = line.trim();
             
-            // Match if statements (including else if)
-            // Use pre-compiled regex for better performance
             const ifMatch = ASTParser.IF_PATTERN.exec(trimmedLine);
             if (ifMatch) {
                 const result = this.findIfBlockEnd(lines, i);
@@ -53,36 +50,116 @@ export class ASTParser {
         
         return ifStatements;
     }
-    
+
+    /**
+     * Skips past a string literal, char literal, template literal, or comment
+     * starting at position `pos` in `line`. Returns the index of the last
+     * character consumed (the caller should continue from pos+1).
+     * If the character at `pos` is not a quote or comment start, returns -1.
+     *
+     * For multi-line constructs (template literals, block comments),
+     * `ctx.line` and `ctx.pos` are updated to the line/column where
+     * the construct ends.
+     */
+    private static skipLiteral(
+        lines: string[],
+        lineIndex: number,
+        pos: number,
+        ctx?: { line: number; pos: number }
+    ): number {
+        const line = lines[lineIndex];
+        const ch = line[pos];
+
+        // Double-quoted string
+        if (ch === '"') {
+            let j = pos + 1;
+            while (j < line.length) {
+                if (line[j] === '\\') { j += 2; continue; }
+                if (line[j] === '"') { return j; }
+                j++;
+            }
+            return line.length - 1; // unterminated, consume rest of line
+        }
+
+        // Single-quoted string / char literal
+        if (ch === '\'') {
+            let j = pos + 1;
+            while (j < line.length) {
+                if (line[j] === '\\') { j += 2; continue; }
+                if (line[j] === '\'') { return j; }
+                j++;
+            }
+            return line.length - 1;
+        }
+
+        // Template literal (backtick) — can span multiple lines
+        if (ch === '`') {
+            let li = lineIndex;
+            let j = pos + 1;
+            while (li < lines.length) {
+                const curLine = lines[li];
+                while (j < curLine.length) {
+                    if (curLine[j] === '\\') { j += 2; continue; }
+                    if (curLine[j] === '`') {
+                        if (ctx) { ctx.line = li; ctx.pos = j; }
+                        return j;
+                    }
+                    j++;
+                }
+                li++;
+                j = 0;
+            }
+            if (ctx) { ctx.line = lines.length - 1; ctx.pos = lines[lines.length - 1].length - 1; }
+            return line.length - 1;
+        }
+
+        // Single-line comment
+        if (ch === '/' && pos + 1 < line.length && line[pos + 1] === '/') {
+            return line.length - 1; // consume rest of line
+        }
+
+        // Block comment — can span multiple lines
+        if (ch === '/' && pos + 1 < line.length && line[pos + 1] === '*') {
+            let li = lineIndex;
+            let j = pos + 2;
+            while (li < lines.length) {
+                const curLine = lines[li];
+                while (j < curLine.length) {
+                    if (curLine[j] === '*' && j + 1 < curLine.length && curLine[j + 1] === '/') {
+                        if (ctx) { ctx.line = li; ctx.pos = j + 1; }
+                        return j + 1;
+                    }
+                    j++;
+                }
+                li++;
+                j = 0;
+            }
+            if (ctx) { ctx.line = lines.length - 1; ctx.pos = lines[lines.length - 1].length - 1; }
+            return line.length - 1;
+        }
+
+        return -1; // not a literal/comment
+    }
+
     /**
      * Finds the end of an if block by matching braces.
-     * Extracts the full condition and determines the block boundaries.
-     * 
-     * @param lines - Array of code lines
-     * @param startLine - Line number where the if statement was found
-     * @returns Parsed if statement or null if unable to parse
+     * Skips braces inside strings, template literals, and comments.
      */
     private findIfBlockEnd(lines: string[], startLine: number): IfStatement | null {
         const startLineText = lines[startLine];
         const condition = this.extractFullCondition(lines, startLine);
         const startColumn = startLineText.indexOf('if');
         
-        // Find where the if block starts (opening brace)
-        // Only look for '{' after the 'if' keyword to avoid counting a leading '}'
-        // from a previous block (e.g., "} else if (b) {")
         let blockStartLine = startLine;
         let foundOpenBrace = false;
         let braceSearchStart = 0;
 
-        // Check if opening brace is on the same line as the if statement
         const ifPos = startColumn >= 0 ? startColumn : 0;
         const braceOnStartLine = lines[startLine].indexOf('{', ifPos);
         if (braceOnStartLine !== -1) {
             foundOpenBrace = true;
             braceSearchStart = braceOnStartLine;
         } else {
-            // Look for opening brace on following lines
-            // This handles cases where the brace is on a new line
             for (let i = startLine + 1; i < lines.length && i < startLine + CONFIG_DEFAULTS.MAX_BRACE_SEARCH_LINES; i++) {
                 if (lines[i].includes('{')) {
                     blockStartLine = i;
@@ -92,91 +169,82 @@ export class ASTParser {
             }
         }
 
-        // If no opening brace found, this might be a single-line if statement
-        // or invalid syntax, so we skip it
         if (!foundOpenBrace) {
             return null;
         }
 
-        // Count braces to find the matching closing brace
         let braceCount = 0;
-        let endLine = -1;
-        let endColumn = -1;
+        const ctx = { line: 0, pos: 0 };
 
-        // Optimized brace counting using indexOf for better performance
         for (let i = blockStartLine; i < lines.length; i++) {
             const line = lines[i];
-            // On the start line, begin scanning from after the 'if' keyword
-            // to skip any leading '}' from a previous block
             let pos = (i === blockStartLine && braceSearchStart > 0) ? braceSearchStart : 0;
             
             while (pos < line.length) {
-                const openPos = line.indexOf('{', pos);
-                const closePos = line.indexOf('}', pos);
-                
-                // No more braces in this line
-                if (openPos === -1 && closePos === -1) break;
-                
-                // Process whichever brace comes first
-                if (openPos !== -1 && (closePos === -1 || openPos < closePos)) {
+                const ch = line[pos];
+
+                // Skip string literals, template literals, and comments
+                if (ch === '"' || ch === '\'' || ch === '`' || (ch === '/' && pos + 1 < line.length && (line[pos + 1] === '/' || line[pos + 1] === '*'))) {
+                    ctx.line = i;
+                    ctx.pos = pos;
+                    const end = ASTParser.skipLiteral(lines, i, pos, ctx);
+                    if (end !== -1) {
+                        // If the literal spans multiple lines, jump ahead
+                        if (ctx.line !== i) {
+                            i = ctx.line;
+                            pos = ctx.pos + 1;
+                            // Need to update line reference for the outer while
+                            break;
+                        }
+                        pos = end + 1;
+                        continue;
+                    }
+                }
+
+                if (ch === '{') {
                     braceCount++;
-                    pos = openPos + 1;
-                } else if (closePos !== -1) {
+                } else if (ch === '}') {
                     braceCount--;
                     
-                    // Found the matching closing brace
                     if (braceCount === 0) {
-                        endLine = i;
-                        endColumn = closePos + 1; // Position after the closing brace
                         return {
                             condition,
                             startLine,
-                            endLine,
+                            endLine: i,
                             startColumn,
-                            endColumn
+                            endColumn: pos + 1
                         };
                     }
-                    pos = closePos + 1;
                 }
+                pos++;
             }
         }
         
-        // If we couldn't find the closing brace, the code might be incomplete
         return null;
     }
     
     /**
      * Extracts the complete condition from an if statement.
-     * Handles multi-line conditions by tracking parentheses.
-     * 
-     * @param lines - Array of code lines
-     * @param startLine - Line number where the if statement starts
-     * @returns The extracted condition text without parentheses
+     * Handles multi-line conditions and skips parens inside strings,
+     * char literals, template literals, and comments.
      */
     private extractFullCondition(lines: string[], startLine: number): string {
         const line = lines[startLine];
         const conditionStart = line.indexOf('(');
         
-        // No opening parenthesis found - invalid if statement
         if (conditionStart === -1) {
             return '';
         }
         
-        // Use array for better string concatenation performance
         const conditionParts: string[] = [];
         let parenCount = 0;
         let startedCondition = false;
         
-        // Extract condition by tracking parentheses
         for (let i = startLine; i < lines.length && i < startLine + CONFIG_DEFAULTS.MAX_CONDITION_SEARCH_LINES; i++) {
             const currentLine = lines[i];
             const startChar = i === startLine ? conditionStart : 0;
-            const endChar = currentLine.length;
+            const lineSegment = currentLine.substring(startChar);
             
-            // Extract relevant portion of the line
-            let lineSegment = currentLine.substring(startChar, endChar);
-            
-            // Process the line segment, skipping parens inside strings/chars
             for (let j = 0; j < lineSegment.length; j++) {
                 const char = lineSegment[j];
 
@@ -208,9 +276,36 @@ export class ASTParser {
                     continue;
                 }
 
+                // Skip template literals (backticks)
+                if (char === '`') {
+                    if (startedCondition) { conditionParts.push(char); }
+                    j++;
+                    while (j < lineSegment.length) {
+                        const sc = lineSegment[j];
+                        if (startedCondition) { conditionParts.push(sc); }
+                        if (sc === '\\') { j++; if (j < lineSegment.length && startedCondition) { conditionParts.push(lineSegment[j]); } }
+                        else if (sc === '`') { break; }
+                        j++;
+                    }
+                    continue;
+                }
+
                 // Skip single-line comments
                 if (char === '/' && j + 1 < lineSegment.length && lineSegment[j + 1] === '/') {
-                    break; // rest of line is a comment
+                    break;
+                }
+
+                // Skip block comments (within the same line)
+                if (char === '/' && j + 1 < lineSegment.length && lineSegment[j + 1] === '*') {
+                    j += 2;
+                    while (j < lineSegment.length) {
+                        if (lineSegment[j] === '*' && j + 1 < lineSegment.length && lineSegment[j + 1] === '/') {
+                            j++; // skip past the '/'
+                            break;
+                        }
+                        j++;
+                    }
+                    continue;
                 }
 
                 if (char === '(') {
@@ -225,25 +320,18 @@ export class ASTParser {
                 if (char === ')') {
                     parenCount--;
                     
-                    // Found the closing parenthesis of the condition
                     if (parenCount === 0) {
-                        // Join parts and clean up
                         const fullCondition = conditionParts.join('');
-                        // Remove the opening and closing parentheses,
-                        // normalize whitespace, and trim
                         return fullCondition.slice(1, -1).replace(/\s+/g, ' ').trim();
                     }
                 }
             }
             
-            // Add space between lines for multi-line conditions
             if (startedCondition && i !== startLine) {
                 conditionParts.push(' ');
             }
         }
         
-        // If we reach here, the condition was not properly closed
-        // Return what we found, normalized
         const condition = conditionParts.join('');
         return condition.slice(1).replace(/\s+/g, ' ').trim();
     }

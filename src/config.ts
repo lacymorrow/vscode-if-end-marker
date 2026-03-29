@@ -29,7 +29,7 @@ export const CONFIG_DEFAULTS = {
     DEBOUNCE_DELAY: 300,
     
     /** Minimum number of lines an if statement must span to show markers */
-    MIN_LINE_COUNT: 5,
+    MIN_LINE_COUNT: 4,
     
     /** Delay for viewport change updates (scrolling) */
     VIEWPORT_UPDATE_DELAY: 150,
