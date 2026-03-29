@@ -1,7 +1,7 @@
 {
   "name": "vscode-if-end-marker",
   "displayName": "If End Marker",
-  "description": "Never lose track of which if statement you're closing! Shows inline markers with the original condition at closing braces in JS/TS files.",
+  "description": "Never lose track of which if statement you're closing! Shows inline markers with the original condition at closing braces in JS/TS/C/C++ files.",
   "version": "0.2.0",
   "publisher": "shipkit",
   "author": {
@@ -28,6 +28,8 @@
     "typescript",
     "jsx",
     "tsx",
+    "c",
+    "cpp",
     "productivity",
     "code navigation"
   ],
@@ -48,7 +50,9 @@
     "onLanguage:javascript",
     "onLanguage:typescript",
     "onLanguage:javascriptreact",
-    "onLanguage:typescriptreact"
+    "onLanguage:typescriptreact",
+    "onLanguage:c",
+    "onLanguage:cpp"
   ],
   "main": "./out/extension.js",
   "contributes": {

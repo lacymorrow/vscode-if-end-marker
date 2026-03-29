@@ -17,12 +17,12 @@ export interface IfStatement {
 }
 
 /**
- * Parser for extracting if statements from JavaScript/TypeScript code.
+ * Parser for extracting if statements from JavaScript/TypeScript/C/C++ code.
  * Uses a regex-based approach to find if statements and their closing braces.
  */
 export class ASTParser {
     /** Pre-compiled regex pattern for if statement detection */
-    private static readonly IF_PATTERN = /^(else\s+)?if\s*\(/;
+    private static readonly IF_PATTERN = /^(\}\s*)?(else\s+)?if\s*\(/;
     
     /**
      * Parses the given code and extracts all if statements.
@@ -68,12 +68,18 @@ export class ASTParser {
         const startColumn = startLineText.indexOf('if');
         
         // Find where the if block starts (opening brace)
+        // Only look for '{' after the 'if' keyword to avoid counting a leading '}'
+        // from a previous block (e.g., "} else if (b) {")
         let blockStartLine = startLine;
         let foundOpenBrace = false;
-        
+        let braceSearchStart = 0;
+
         // Check if opening brace is on the same line as the if statement
-        if (lines[startLine].includes('{')) {
+        const ifPos = startColumn >= 0 ? startColumn : 0;
+        const braceOnStartLine = lines[startLine].indexOf('{', ifPos);
+        if (braceOnStartLine !== -1) {
             foundOpenBrace = true;
+            braceSearchStart = braceOnStartLine;
         } else {
             // Look for opening brace on following lines
             // This handles cases where the brace is on a new line
@@ -85,22 +91,24 @@ export class ASTParser {
                 }
             }
         }
-        
+
         // If no opening brace found, this might be a single-line if statement
         // or invalid syntax, so we skip it
         if (!foundOpenBrace) {
             return null;
         }
-        
+
         // Count braces to find the matching closing brace
         let braceCount = 0;
         let endLine = -1;
         let endColumn = -1;
-        
+
         // Optimized brace counting using indexOf for better performance
         for (let i = blockStartLine; i < lines.length; i++) {
             const line = lines[i];
-            let pos = 0;
+            // On the start line, begin scanning from after the 'if' keyword
+            // to skip any leading '}' from a previous block
+            let pos = (i === blockStartLine && braceSearchStart > 0) ? braceSearchStart : 0;
             
             while (pos < line.length) {
                 const openPos = line.indexOf('{', pos);
