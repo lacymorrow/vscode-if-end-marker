@@ -1,3 +1,10 @@
+## [0.3.1](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.3.0...v0.3.1) (2026-03-30)
+
+
+### Bug Fixes
+
+* **ci:** vsce reads VSCE_PAT from env automatically, drop --pat flag ([f30fdb4](https://github.com/lacymorrow/vscode-if-end-marker/commit/f30fdb45b650f8825b609d971ee1df21faa0c9a1))
+
 # [0.3.0](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.2.0...v0.3.0) (2026-03-30)
 
 
