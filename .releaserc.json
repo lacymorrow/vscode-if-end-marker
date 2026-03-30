@@ -14,7 +14,7 @@
       "@semantic-release/exec",
       {
         "prepareCmd": "npm run compile && npm run package",
-        "publishCmd": "npx vsce publish --pat ${VSCE_PAT} --no-dependencies"
+        "publishCmd": "npx vsce publish --no-dependencies"
       }
     ],
     [
