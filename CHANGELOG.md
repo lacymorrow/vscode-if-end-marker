@@ -1,3 +1,16 @@
+# [0.3.0](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.2.0...v0.3.0) (2026-03-30)
+
+
+### Bug Fixes
+
+* **ci:** add vsce marketplace publish and disable husky in CI ([d333803](https://github.com/lacymorrow/vscode-if-end-marker/commit/d3338035614d4651667020633f789f179b3f1cc7))
+* production readiness overhaul ([09dc017](https://github.com/lacymorrow/vscode-if-end-marker/commit/09dc01743bf2968ad64e5cd2f8b716e2d888276e))
+
+
+### Features
+
+* add C/C++ language support ([#5](https://github.com/lacymorrow/vscode-if-end-marker/issues/5)) ([abc6c9f](https://github.com/lacymorrow/vscode-if-end-marker/commit/abc6c9f95ca2d6ceba20c77560432a7358c70d27)), closes [#4](https://github.com/lacymorrow/vscode-if-end-marker/issues/4)
+
 # [0.2.0](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.1.0...v0.2.0) (2025-07-19)
 
 

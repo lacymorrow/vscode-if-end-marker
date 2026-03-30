@@ -2,7 +2,7 @@
   "name": "vscode-if-end-marker",
   "displayName": "If End Marker",
   "description": "Never lose track of which if statement you're closing! Shows inline markers with the original condition at closing braces in JS/TS/C/C++ files.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "shipkit",
   "author": {
     "name": "Lacy Morrow",
