@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Marketplace listing
+    url: https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker
+    about: Install, rate, or review the extension.
+  - name: Discussions
+    url: https://github.com/lacymorrow/vscode-if-end-marker/discussions
+    about: Ask questions or share patterns.

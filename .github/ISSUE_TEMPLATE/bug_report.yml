@@ -1,0 +1,58 @@
+name: Bug report
+description: A marker is missing, wrong, or causing a problem
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Extension version
+      placeholder: "0.3.0"
+    validations:
+      required: true
+
+  - type: input
+    id: vscode
+    attributes:
+      label: VS Code version
+      description: From Help → About
+      placeholder: "1.95.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language
+      options:
+        - JavaScript
+        - TypeScript
+        - JSX
+        - TSX
+        - C
+        - C++
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: snippet
+    attributes:
+      label: Minimal code snippet that reproduces the bug
+      render: javascript
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to see at the closing brace?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What did the extension show (or fail to show)?
+      description: Screenshots welcome.
+    validations:
+      required: true
