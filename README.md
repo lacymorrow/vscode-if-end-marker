@@ -6,7 +6,7 @@
 
 [![VS Marketplace Version](https://vsmarketplacebadges.dev/version-short/shipkit.vscode-if-end-marker.svg?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
 [![Installs](https://vsmarketplacebadges.dev/installs/shipkit.vscode-if-end-marker.svg)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
-[![Rating](https://vsmarketplacebadges.dev/rating-short/shipkit.vscode-if-end-marker.svg)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker&ssr=false#review-details)
+[![Rating](https://vsmarketplacebadges.dev/rating-short/shipkit.vscode-if-end-marker.svg)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker#review-details)
 [![CI](https://img.shields.io/github/actions/workflow/status/lacymorrow/vscode-if-end-marker/ci.yml?style=flat&label=CI)](https://github.com/lacymorrow/vscode-if-end-marker/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](https://opensource.org/licenses/MIT)
 
