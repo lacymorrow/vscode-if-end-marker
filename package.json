@@ -20,18 +20,26 @@
     "url": "https://github.com/lacymorrow/vscode-if-end-marker/issues"
   },
   "keywords": [
+    "vscode",
+    "vscode-extension",
+    "extension",
     "if",
+    "if-statement",
     "condition",
     "marker",
+    "inlay-hints",
     "inline hints",
     "javascript",
     "typescript",
     "jsx",
     "tsx",
+    "mjs",
+    "cjs",
     "c",
     "cpp",
     "productivity",
-    "code navigation"
+    "code navigation",
+    "developer-tools"
   ],
   "icon": "images/logo.png",
   "galleryBanner": {
