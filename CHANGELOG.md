@@ -1,3 +1,10 @@
+## [0.3.3](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.3.2...v0.3.3) (2026-05-14)
+
+
+### Bug Fixes
+
+* **assets:** center the curly-brace mark in the social preview ([#19](https://github.com/lacymorrow/vscode-if-end-marker/issues/19)) ([e9b4cad](https://github.com/lacymorrow/vscode-if-end-marker/commit/e9b4cad780b7f6781e420efc3ce5ead4f6bc9139))
+
 ## [0.3.2](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.3.1...v0.3.2) (2026-05-14)
 
 
