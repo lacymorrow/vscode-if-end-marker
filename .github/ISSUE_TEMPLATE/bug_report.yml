@@ -28,6 +28,8 @@ body:
         - TypeScript
         - JSX
         - TSX
+        - MJS
+        - CJS
         - C
         - C++
         - Other
@@ -38,7 +40,6 @@ body:
     id: snippet
     attributes:
       label: Minimal code snippet that reproduces the bug
-      render: javascript
     validations:
       required: true
 
