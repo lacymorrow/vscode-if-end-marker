@@ -1,3 +1,11 @@
+## [0.3.2](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.3.1...v0.3.2) (2026-05-14)
+
+
+### Bug Fixes
+
+* **parser:** correctly skip braceless if statements in C/C++ ([#16](https://github.com/lacymorrow/vscode-if-end-marker/issues/16)) ([e536b2c](https://github.com/lacymorrow/vscode-if-end-marker/commit/e536b2ca8384d615110d20d8310b93cd9be8b474)), closes [#6](https://github.com/lacymorrow/vscode-if-end-marker/issues/6)
+* **readme:** replace retired shields.io marketplace badges ([#13](https://github.com/lacymorrow/vscode-if-end-marker/issues/13)) ([bedd386](https://github.com/lacymorrow/vscode-if-end-marker/commit/bedd386af5cd51a9b0508db4658fa41cad227760))
+
 ## [0.3.1](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.3.0...v0.3.1) (2026-03-30)
 
 
