@@ -131,7 +131,7 @@
     "@types/vscode": "^1.74.0",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.6.0",
-    "glob": "^11.0.3",
+    "glob": "^13.0.6",
     "husky": "^9.1.7",
     "mocha": "^11.7.1",
     "semantic-release": "^24.2.7",
