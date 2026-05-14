@@ -4,10 +4,11 @@
 
 # VS Code If-End Marker
 
-[![Visual Studio Marketplace](https://img.shields.io/visual-studio-marketplace/v/shipkit.vscode-if-end-marker?style=for-the-badge&logo=visual-studio-code)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
-[![Downloads](https://img.shields.io/visual-studio-marketplace/d/shipkit.vscode-if-end-marker?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
-[![Rating](https://img.shields.io/visual-studio-marketplace/r/shipkit.vscode-if-end-marker?style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![VS Marketplace Version](https://vsmarketplacebadges.dev/version-short/shipkit.vscode-if-end-marker.svg?label=marketplace)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
+[![Installs](https://vsmarketplacebadges.dev/installs/shipkit.vscode-if-end-marker.svg)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker)
+[![Rating](https://vsmarketplacebadges.dev/rating-short/shipkit.vscode-if-end-marker.svg)](https://marketplace.visualstudio.com/items?itemName=shipkit.vscode-if-end-marker#review-details)
+[![CI](https://img.shields.io/github/actions/workflow/status/lacymorrow/vscode-if-end-marker/ci.yml?style=flat&label=CI)](https://github.com/lacymorrow/vscode-if-end-marker/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](https://opensource.org/licenses/MIT)
 
 > Never lose track of which `if` statement you're closing again! 🎯
 
