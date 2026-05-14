@@ -17,8 +17,9 @@
   <g transform="translate(820, 120) scale(1.7)" opacity="0.10">
     <rect x="0" y="0" width="256" height="256" rx="56" fill="#3b82f6"/>
     
-			<g fill="#ffffff" font-family="ui-monospace, Menlo, Consolas, monospace">
-				<text x="68" y="170" font-size="100" font-weight="900">{ }</text>
+			<g fill="none" stroke="#ffffff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M 112 60 Q 92 60 92 80 L 92 116 Q 92 128 72 128 Q 92 128 92 140 L 92 176 Q 92 196 112 196"/>
+				<path d="M 144 60 Q 164 60 164 80 L 164 116 Q 164 128 184 128 Q 164 128 164 140 L 164 176 Q 164 196 144 196"/>
 			</g>
   </g>
 
@@ -26,8 +27,9 @@
   <g transform="translate(96, 96) scale(0.47)">
     <rect x="0" y="0" width="256" height="256" rx="56" fill="#3b82f6"/>
     
-			<g fill="#ffffff" font-family="ui-monospace, Menlo, Consolas, monospace">
-				<text x="68" y="170" font-size="100" font-weight="900">{ }</text>
+			<g fill="none" stroke="#ffffff" stroke-width="18" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M 112 60 Q 92 60 92 80 L 92 116 Q 92 128 72 128 Q 92 128 92 140 L 92 176 Q 92 196 112 196"/>
+				<path d="M 144 60 Q 164 60 164 80 L 164 116 Q 164 128 184 128 Q 164 128 164 140 L 164 176 Q 164 196 144 196"/>
 			</g>
   </g>
 
