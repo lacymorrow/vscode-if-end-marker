@@ -141,59 +141,126 @@ export class ASTParser {
         return -1; // not a literal/comment
     }
 
+    private findConditionEnd(lines: string[], startLine: number): { line: number; col: number } | null {
+        const line = lines[startLine];
+        const ifPos = line.indexOf('if');
+        if (ifPos === -1) { return null; }
+        const conditionStart = line.indexOf('(', ifPos);
+        if (conditionStart === -1) { return null; }
+
+        let parenCount = 0;
+
+        for (let i = startLine; i < lines.length && i < startLine + CONFIG_DEFAULTS.MAX_CONDITION_SEARCH_LINES; i++) {
+            const currentLine = lines[i];
+            const startChar = i === startLine ? conditionStart : 0;
+
+            for (let j = startChar; j < currentLine.length; j++) {
+                const ch = currentLine[j];
+
+                if (ch === '"' || ch === '\'' || ch === '`') {
+                    j++;
+                    while (j < currentLine.length) {
+                        if (currentLine[j] === '\\') { j++; }
+                        else if (currentLine[j] === ch) { break; }
+                        j++;
+                    }
+                    continue;
+                }
+                if (ch === '/' && j + 1 < currentLine.length && currentLine[j + 1] === '/') {
+                    break;
+                }
+                if (ch === '/' && j + 1 < currentLine.length && currentLine[j + 1] === '*') {
+                    j += 2;
+                    while (j < currentLine.length) {
+                        if (currentLine[j] === '*' && j + 1 < currentLine.length && currentLine[j + 1] === '/') {
+                            j++;
+                            break;
+                        }
+                        j++;
+                    }
+                    continue;
+                }
+
+                if (ch === '(') { parenCount++; }
+                else if (ch === ')') {
+                    parenCount--;
+                    if (parenCount === 0) {
+                        return { line: i, col: j };
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Finds the end of an if block by matching braces.
      * Skips braces inside strings, template literals, and comments.
+     * Only looks for the opening brace on the condition-end line or the
+     * first non-blank line after it, so braceless if statements are
+     * correctly skipped.
      */
     private findIfBlockEnd(lines: string[], startLine: number): IfStatement | null {
         const startLineText = lines[startLine];
         const condition = this.extractFullCondition(lines, startLine);
         const startColumn = startLineText.indexOf('if');
-        
-        let blockStartLine = startLine;
-        let foundOpenBrace = false;
+
+        const condEnd = this.findConditionEnd(lines, startLine);
+        if (!condEnd) { return null; }
+
+        let blockStartLine = -1;
         let braceSearchStart = 0;
 
-        const ifPos = startColumn >= 0 ? startColumn : 0;
-        const braceOnStartLine = lines[startLine].indexOf('{', ifPos);
-        if (braceOnStartLine !== -1) {
-            foundOpenBrace = true;
-            braceSearchStart = braceOnStartLine;
-        } else {
-            for (let i = startLine + 1; i < lines.length && i < startLine + CONFIG_DEFAULTS.MAX_BRACE_SEARCH_LINES; i++) {
-                if (lines[i].includes('{')) {
-                    blockStartLine = i;
-                    foundOpenBrace = true;
-                    break;
-                }
+        const condEndLineText = lines[condEnd.line];
+        for (let j = condEnd.col + 1; j < condEndLineText.length; j++) {
+            const ch = condEndLineText[j];
+            if (ch === '{') {
+                blockStartLine = condEnd.line;
+                braceSearchStart = j;
+                break;
+            }
+            if (ch !== ' ' && ch !== '\t') {
+                return null;
             }
         }
 
-        if (!foundOpenBrace) {
-            return null;
+        if (blockStartLine === -1) {
+            for (let i = condEnd.line + 1; i < lines.length && i <= condEnd.line + 2; i++) {
+                const trimmed = lines[i].trim();
+                if (trimmed === '') { continue; }
+                if (trimmed[0] === '{') {
+                    blockStartLine = i;
+                    braceSearchStart = lines[i].indexOf('{');
+                    break;
+                }
+                return null;
+            }
         }
+
+        if (blockStartLine === -1) { return null; }
 
         let braceCount = 0;
         const ctx = { line: 0, pos: 0 };
+        let i = blockStartLine;
+        let nextPos = braceSearchStart;
 
-        for (let i = blockStartLine; i < lines.length; i++) {
+        while (i < lines.length) {
             const line = lines[i];
-            let pos = (i === blockStartLine && braceSearchStart > 0) ? braceSearchStart : 0;
-            
+            let pos = nextPos;
+            nextPos = 0;
+
             while (pos < line.length) {
                 const ch = line[pos];
 
-                // Skip string literals, template literals, and comments
                 if (ch === '"' || ch === '\'' || ch === '`' || (ch === '/' && pos + 1 < line.length && (line[pos + 1] === '/' || line[pos + 1] === '*'))) {
                     ctx.line = i;
                     ctx.pos = pos;
                     const end = ASTParser.skipLiteral(lines, i, pos, ctx);
                     if (end !== -1) {
-                        // If the literal spans multiple lines, jump ahead
                         if (ctx.line !== i) {
                             i = ctx.line;
-                            pos = ctx.pos + 1;
-                            // Need to update line reference for the outer while
+                            nextPos = ctx.pos + 1;
                             break;
                         }
                         pos = end + 1;
@@ -205,7 +272,7 @@ export class ASTParser {
                     braceCount++;
                 } else if (ch === '}') {
                     braceCount--;
-                    
+
                     if (braceCount === 0) {
                         return {
                             condition,
@@ -218,8 +285,11 @@ export class ASTParser {
                 }
                 pos++;
             }
+
+            if (nextPos > 0) { continue; }
+            i++;
         }
-        
+
         return null;
     }
     

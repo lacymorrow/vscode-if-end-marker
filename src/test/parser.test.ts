@@ -289,6 +289,96 @@ if (status == 0) {
         assert.strictEqual(results[2].condition, 'status < 0');
     });
 
+    // --- Braceless if statements ---
+
+    test('Should skip braceless if with statement on next line (C style)', () => {
+        const code = `
+if (retval)
+    return retval;
+
+if (dev->going_away) {
+    retval = -ENODEV;
+    goto out;
+}`;
+        const results = parser.parse(code, 'c');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, 'dev->going_away');
+    });
+
+    test('Should skip braceless if followed by braced if (input.c pattern)', () => {
+        const code = `
+if (!dev->users++ && dev->open)
+    retval = dev->open(dev);
+
+if (retval) {
+    dev->users--;
+    if (!--handle->open) {
+        synchronize_rcu();
+    }
+}`;
+        const results = parser.parse(code, 'c');
+
+        assert.strictEqual(results.length, 2);
+        assert.strictEqual(results[0].condition, 'retval');
+        assert.strictEqual(results[0].startLine, 4);
+        assert.strictEqual(results[0].endLine, 8);
+        assert.strictEqual(results[1].condition, '!--handle->open');
+        assert.strictEqual(results[1].startLine, 6);
+        assert.strictEqual(results[1].endLine, 8);
+    });
+
+    test('Should skip braceless if with inline statement (same line)', () => {
+        const code = `
+if (error) return -1;
+if (valid) {
+    process();
+}`;
+        const results = parser.parse(code, 'c');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, 'valid');
+    });
+
+    test('Should handle full input_open_device function from issue #6', () => {
+        const code = `int input_open_device(struct input_handle *handle)
+{
+\tstruct input_dev *dev = handle->dev;
+\tint retval;
+
+\tretval = mutex_lock_interruptible(&dev->mutex);
+\tif (retval)
+\t\treturn retval;
+
+\tif (dev->going_away) {
+\t\tretval = -ENODEV;
+\t\tgoto out;
+\t}
+
+\thandle->open++;
+
+\tif (!dev->users++ && dev->open)
+\t\tretval = dev->open(dev);
+
+\tif (retval) {
+\t\tdev->users--;
+\t\tif (!--handle->open) {
+\t\t\tsynchronize_rcu();
+\t\t}
+\t}
+
+ out:
+\tmutex_unlock(&dev->mutex);
+\treturn retval;
+}`;
+        const results = parser.parse(code, 'c');
+
+        assert.strictEqual(results.length, 3);
+        assert.strictEqual(results[0].condition, 'dev->going_away');
+        assert.strictEqual(results[1].condition, 'retval');
+        assert.strictEqual(results[2].condition, '!--handle->open');
+    });
+
     // --- Edge cases ---
 
     test('Should handle empty code', () => {
