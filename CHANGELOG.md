@@ -1,3 +1,10 @@
+## [0.3.5](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.3.4...v0.3.5) (2026-05-15)
+
+
+### Bug Fixes
+
+* **parser:** handle comments between condition and opening brace ([#23](https://github.com/lacymorrow/vscode-if-end-marker/issues/23)) ([3140baa](https://github.com/lacymorrow/vscode-if-end-marker/commit/3140baa5d1a55eb79d5fd235e455845717363865)), closes [#22](https://github.com/lacymorrow/vscode-if-end-marker/issues/22)
+
 ## [0.3.4](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.3.3...v0.3.4) (2026-05-15)
 
 
