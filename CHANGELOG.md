@@ -1,3 +1,10 @@
+## [0.3.4](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.3.3...v0.3.4) (2026-05-15)
+
+
+### Bug Fixes
+
+* update TypeScript 6.0 compatibility and bump dev dependencies ([#20](https://github.com/lacymorrow/vscode-if-end-marker/issues/20)) ([1412977](https://github.com/lacymorrow/vscode-if-end-marker/commit/1412977412e436e639a4514fc6eeb0930a069aa1))
+
 ## [0.3.3](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.3.2...v0.3.3) (2026-05-14)
 
 
