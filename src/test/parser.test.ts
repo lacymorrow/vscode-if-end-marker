@@ -322,7 +322,7 @@ if (retval) {
         assert.strictEqual(results.length, 2);
         assert.strictEqual(results[0].condition, 'retval');
         assert.strictEqual(results[0].startLine, 4);
-        assert.strictEqual(results[0].endLine, 8);
+        assert.strictEqual(results[0].endLine, 9);
         assert.strictEqual(results[1].condition, '!--handle->open');
         assert.strictEqual(results[1].startLine, 6);
         assert.strictEqual(results[1].endLine, 8);
@@ -377,6 +377,46 @@ if (valid) {
         assert.strictEqual(results[0].condition, 'dev->going_away');
         assert.strictEqual(results[1].condition, 'retval');
         assert.strictEqual(results[2].condition, '!--handle->open');
+    });
+
+    // --- Comments between condition and brace ---
+
+    test('Should handle single-line comment between condition and next-line brace', () => {
+        const code = `
+if (g_ucSerBuf[STATUS] == 0x00) //STATUS=2
+{
+    return CommandOk;
+}`;
+        const results = parser.parse(code, 'c');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, 'g_ucSerBuf[STATUS] == 0x00');
+        assert.strictEqual(results[0].startLine, 1);
+        assert.strictEqual(results[0].endLine, 4);
+    });
+
+    test('Should handle block comment between condition and brace on same line', () => {
+        const code = `
+if (condition) /* checked */ {
+    run();
+}`;
+        const results = parser.parse(code, 'c');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, 'condition');
+    });
+
+    test('Should still skip braceless if with comment', () => {
+        const code = `
+if (error) //check
+    return -1;
+if (valid) {
+    process();
+}`;
+        const results = parser.parse(code, 'c');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, 'valid');
     });
 
     // --- Edge cases ---
