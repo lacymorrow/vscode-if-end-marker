@@ -220,6 +220,25 @@ export class ASTParser {
                 braceSearchStart = j;
                 break;
             }
+            if (ch === '/' && j + 1 < condEndLineText.length) {
+                if (condEndLineText[j + 1] === '/') {
+                    break;
+                }
+                if (condEndLineText[j + 1] === '*') {
+                    let k = j + 2;
+                    let closed = false;
+                    while (k < condEndLineText.length - 1) {
+                        if (condEndLineText[k] === '*' && condEndLineText[k + 1] === '/') {
+                            j = k + 1;
+                            closed = true;
+                            break;
+                        }
+                        k++;
+                    }
+                    if (!closed) { break; }
+                    continue;
+                }
+            }
             if (ch !== ' ' && ch !== '\t') {
                 return null;
             }
