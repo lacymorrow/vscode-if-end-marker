@@ -419,6 +419,54 @@ if (valid) {
         assert.strictEqual(results[0].condition, 'valid');
     });
 
+    // --- CRLF line endings ---
+
+    test('Should handle CRLF line endings with brace on next line', () => {
+        const code = "if (condition)\r\n{\r\n    console.log('test');\r\n}";
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, 'condition');
+    });
+
+    test('Should handle CRLF in C code with preprocessor directives', () => {
+        const code = [
+            'void func(void)',
+            '{',
+            '  #if(UART_INT == 1)',
+            '  receive_data();',
+            '  #endif',
+            '  if (status == 0x00 && seq == (buf[CMD] & 0xf0))',
+            '  {',
+            '    memcpy(dst, &buf[DATA], len);',
+            '    return OK;',
+            '  }',
+            '  else',
+            '    return ERR;',
+            '}',
+        ].join('\r\n');
+        const results = parser.parse(code, 'c');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, 'status == 0x00 && seq == (buf[CMD] & 0xf0)');
+    });
+
+    test('Should handle CRLF with comment after condition', () => {
+        const code = "if (status == 0x00) //check\r\n{\r\n    return OK;\r\n}";
+        const results = parser.parse(code, 'c');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, 'status == 0x00');
+    });
+
+    test('Should handle CRLF with brace on same line', () => {
+        const code = "if (x > 0) {\r\n    process(x);\r\n}";
+        const results = parser.parse(code, 'c');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].condition, 'x > 0');
+    });
+
     // --- Edge cases ---
 
     test('Should handle empty code', () => {
