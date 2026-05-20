@@ -33,7 +33,7 @@ export class ASTParser {
      */
     parse(code: string, languageId: string): IfStatement[] {
         const ifStatements: IfStatement[] = [];
-        const lines = code.split('\n');
+        const lines = code.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
         
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
