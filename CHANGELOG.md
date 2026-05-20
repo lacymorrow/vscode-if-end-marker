@@ -1,3 +1,10 @@
+## [0.3.6](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.3.5...v0.3.6) (2026-05-20)
+
+
+### Bug Fixes
+
+* **parser:** normalize CRLF line endings before parsing ([#24](https://github.com/lacymorrow/vscode-if-end-marker/issues/24)) ([#28](https://github.com/lacymorrow/vscode-if-end-marker/issues/28)) ([6bc96f4](https://github.com/lacymorrow/vscode-if-end-marker/commit/6bc96f43027addf332f2f8000b7b78549d2613a5))
+
 ## [0.3.5](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.3.4...v0.3.5) (2026-05-15)
 
 
