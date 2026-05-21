@@ -14,7 +14,7 @@
   "homepage": "https://github.com/lacymorrow/vscode-if-end-marker#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lacymorrow/vscode-if-end-marker.git"
+    "url": "git+https://github.com/lacymorrow/vscode-if-end-marker.git"
   },
   "bugs": {
     "url": "https://github.com/lacymorrow/vscode-if-end-marker/issues"
