@@ -129,7 +129,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.0",
+    "@commitlint/cli": "^21.2.1",
     "@commitlint/config-conventional": "^21.0.2",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/exec": "^7.1.0",
@@ -142,7 +142,7 @@
     "glob": "^13.0.6",
     "husky": "^9.1.7",
     "mocha": "^11.7.6",
-    "semantic-release": "^25.0.5",
+    "semantic-release": "^25.0.7",
     "standard-version": "^9.5.0",
     "typescript": "^6.0.3"
   },
