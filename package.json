@@ -144,7 +144,7 @@
     "mocha": "^11.7.6",
     "semantic-release": "^25.0.5",
     "standard-version": "^9.5.0",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "extensionPack": [],
   "extensionDependencies": [],
