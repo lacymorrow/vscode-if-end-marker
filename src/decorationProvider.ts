@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
-import { ASTParser, IfStatement } from './parser';
-import { CONFIG_NAMESPACE, CONFIG_KEYS, CONFIG_DEFAULTS, SUPPORTED_LANGUAGES } from './config';
+import { ASTParser, BlockMarker, ConstructKind } from './parser';
+import { CONFIG_NAMESPACE, CONFIG_KEYS, CONFIG_DEFAULTS, KNOWN_CONSTRUCTS, SUPPORTED_LANGUAGES } from './config';
+import { formatBlockMarker } from './markerText';
 
 /**
- * Provides decoration functionality for displaying if statement conditions
- * as inline markers at the closing brace of if blocks.
+ * Provides decoration functionality for displaying a block's opening line
+ * as an inline marker at its closing brace.
  */
 export class IfStatementDecorationProvider {
     /** The decoration type used to render inline markers */
@@ -14,7 +15,7 @@ export class IfStatementDecorationProvider {
     /** Track the last editor to ensure proper cleanup */
     private lastEditor: vscode.TextEditor | undefined;
     /** Cache parse results keyed by document URI */
-    private parseCache = new Map<string, { version: number; statements: IfStatement[] }>();
+    private parseCache = new Map<string, { version: number; statements: BlockMarker[] }>();
 
     /**
      * Initializes the decoration provider with VS Code theme-aware styling.
@@ -67,15 +68,15 @@ export class IfStatementDecorationProvider {
         const cacheKey = document.uri.toString();
         const cached = this.parseCache.get(cacheKey);
         
-        let ifStatements: IfStatement[];
+        let blocks: BlockMarker[];
         if (cached && cached.version === document.version) {
             // Use cached results
-            ifStatements = cached.statements;
+            blocks = cached.statements;
         } else {
             // Parse and cache results
             const text = document.getText();
-            ifStatements = this.parser.parse(text, document.languageId);
-            
+            blocks = this.parser.parse(text, document.languageId);
+
             // Limit cache size to prevent memory issues
             if (this.parseCache.size > CONFIG_DEFAULTS.MAX_CACHE_SIZE) {
                 // Remove oldest entries
@@ -85,20 +86,25 @@ export class IfStatementDecorationProvider {
             
             this.parseCache.set(cacheKey, {
                 version: document.version,
-                statements: ifStatements
+                statements: blocks
             });
         }
-        
+
+        // Drop constructs the user has turned off. Filtering here rather than in
+        // the parser keeps cached parse results valid across a settings change.
+        const enabledConstructs = this.getEnabledConstructs(config);
+        const wantedBlocks = blocks.filter(block => enabledConstructs.has(block.kind));
+
         // Only create decorations for visible ranges
         const visibleRanges = editor.visibleRanges;
-        const visibleStatements = ifStatements.filter(stmt => {
+        const visibleStatements = wantedBlocks.filter(stmt => {
             const stmtRange = new vscode.Range(
                 new vscode.Position(stmt.startLine, 0),
                 new vscode.Position(stmt.endLine, stmt.endColumn)
             );
             return visibleRanges.some(range => range.intersection(stmtRange));
         });
-        
+
         const decorations = this.createDecorations(visibleStatements, document, config);
         
         // Apply decorations to the editor (this replaces all existing decorations)
@@ -116,28 +122,44 @@ export class IfStatementDecorationProvider {
     }
 
     /**
-     * Creates decoration options for the given if statements.
-     * 
-     * @param ifStatements - Array of parsed if statements
+     * Reads the configured construct list, ignoring any entry the parser does
+     * not recognise so a typo in settings cannot hide every marker.
+     *
+     * @param config - Extension configuration
+     * @returns The set of constructs that should get markers
+     */
+    private getEnabledConstructs(config: vscode.WorkspaceConfiguration): Set<ConstructKind> {
+        const configured = config.get<string[]>(CONFIG_KEYS.CONSTRUCTS, [...CONFIG_DEFAULTS.CONSTRUCTS]);
+        const known = new Set<string>(KNOWN_CONSTRUCTS);
+        return new Set(
+            (Array.isArray(configured) ? configured : [...CONFIG_DEFAULTS.CONSTRUCTS])
+                .filter((kind): kind is ConstructKind => known.has(kind))
+        );
+    }
+
+    /**
+     * Creates decoration options for the given blocks.
+     *
+     * @param blocks - Array of parsed blocks
      * @param document - The VS Code text document
      * @param config - Extension configuration
      * @returns Array of decoration options to apply
      */
     private createDecorations(
-        ifStatements: IfStatement[], 
+        blocks: BlockMarker[],
         document: vscode.TextDocument,
         config: vscode.WorkspaceConfiguration
     ): vscode.DecorationOptions[] {
         const decorations: vscode.DecorationOptions[] = [];
         const maxLength = config.get<number>(CONFIG_KEYS.MAX_CONDITION_LENGTH, CONFIG_DEFAULTS.MAX_CONDITION_LENGTH);
 
-        // Process each if statement
-        for (const ifStmt of ifStatements) {
+        // Process each block
+        for (const ifStmt of blocks) {
             // Only create decoration if it meets criteria
             if (this.shouldShowDecoration(ifStmt, document)) {
                 const position = new vscode.Position(ifStmt.endLine, ifStmt.endColumn);
-                const displayText = this.formatCondition(ifStmt.condition, maxLength);
-                
+                const displayText = formatBlockMarker(ifStmt, maxLength);
+
                 // Create decoration at the closing brace position
                 decorations.push({
                     range: new vscode.Range(position, position),
@@ -154,38 +176,23 @@ export class IfStatementDecorationProvider {
     }
 
     /**
-     * Determines whether a decoration should be shown for the given if statement.
-     * Currently shows decorations only for if blocks spanning 3 or more lines.
-     * 
-     * @param ifStmt - The if statement to check
-     * @param document - The document containing the if statement
+     * Determines whether a decoration should be shown for the given block.
+     * Shows decorations only for blocks spanning at least `minLineCount` lines.
+     *
+     * @param ifStmt - The block to check
+     * @param document - The document containing the block
      * @returns True if decoration should be shown, false otherwise
      */
-    private shouldShowDecoration(ifStmt: IfStatement, document: vscode.TextDocument): boolean {
-        // Only show markers for if statements that span multiple lines
-        // This avoids cluttering short if statements
+    private shouldShowDecoration(ifStmt: BlockMarker, document: vscode.TextDocument): boolean {
+        // Only show markers for blocks that span multiple lines.
+        // This is what keeps short blocks, and the new non-if constructs,
+        // from cluttering normally nested code.
         const config = vscode.workspace.getConfiguration(CONFIG_NAMESPACE);
         const minLineCount = config.get<number>(CONFIG_KEYS.MIN_LINE_COUNT, CONFIG_DEFAULTS.MIN_LINE_COUNT);
         const lineCount = ifStmt.endLine - ifStmt.startLine;
         return lineCount >= minLineCount;
     }
 
-    /**
-     * Formats the condition text for display.
-     * Truncates long conditions and adds ellipsis if needed.
-     * 
-     * @param condition - The condition text to format
-     * @param maxLength - Maximum length before truncation
-     * @returns Formatted condition text
-     */
-    private formatCondition(condition: string, maxLength: number): string {
-        if (condition.length <= maxLength) {
-            return condition;
-        }
-        // Truncate and add ellipsis to indicate continuation
-        return condition.substring(0, maxLength - 3) + '...';
-    }
-    
     /**
      * Disposes of the decoration provider and cleans up resources.
      */

@@ -1,7 +1,7 @@
 # VS Code Marketplace Description
 
 ## Short Description (≤ 200 characters)
-Never lose track of which if statement you're closing! Shows inline markers with the original condition at closing braces in JS/TS files.
+Never lose track of which block you're closing! Shows inline markers with the original if, else, for, while or switch at closing braces in JS/TS/C/C++ files.
 
 ## Long Description
 
@@ -25,7 +25,7 @@ if (user.isAuthenticated &&
 
 ### ✨ Key Features
 
-- **🔍 Smart Detection**: Automatically shows markers for multi-line if statements
+- **🔍 Smart Detection**: Automatically shows markers for multi-line `if`, `else`, `for`, `while` and `switch` blocks
 - **🎨 Theme Integration**: Markers adapt to your VS Code theme using native inlay hint colors
 - **⚡ Blazing Fast**: Optimized for large codebases with smart caching and viewport rendering
 - **🛠️ Fully Configurable**: Customize when and how markers appear

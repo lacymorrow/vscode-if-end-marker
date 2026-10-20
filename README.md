@@ -12,7 +12,7 @@
 
 > Never lose track of which `if` statement you're closing again! 🎯
 
-A lightweight VS Code extension that displays subtle, inline markers showing the condition of `if` statements at their closing braces. Perfect for navigating complex conditional logic in JavaScript, TypeScript, C, and C++ projects.
+A lightweight VS Code extension that displays subtle, inline markers at the closing brace of `if`, `else`, `for`, `while` and `switch` blocks. Perfect for navigating complex conditional logic in JavaScript, TypeScript, C, and C++ projects.
 
 ![Demo](images/demo.gif)
 
@@ -36,7 +36,7 @@ if (user.isAuthenticated &&
 
 ## 🚀 Features
 
-- **🔍 Smart Detection**: Automatically shows markers for multi-line if statements
+- **🔍 Smart Detection**: Automatically shows markers for multi-line `if`, `else`, `for`, `while` and `switch` blocks
 - **🎨 Theme Integration**: Markers adapt to your VS Code theme using native inlay hint colors
 - **⚡ Blazing Fast**: Optimized for large codebases with smart caching and viewport rendering
 - **🛠️ Fully Configurable**: Customize when and how markers appear
@@ -85,7 +85,7 @@ if (user.isAuthenticated &&
 
 ## 💡 Usage
 
-The extension activates automatically when you open JavaScript, TypeScript, C, or C++ files. Markers will appear at the end of if statements that span multiple lines.
+The extension activates automatically when you open JavaScript, TypeScript, C, or C++ files. Markers appear at the closing brace of `if`, `else`, `for`, `while` and `switch` blocks that span multiple lines.
 
 ### Command Palette Commands
 
@@ -107,7 +107,25 @@ if (userIsLoggedIn &&
 } // userIsLoggedIn && hasPermission &&...
 ```
 
-## ⚙️ Configuration
+`else`, `for`, `while` and `switch` blocks get a marker too. `if` shows its bare condition, the rest lead with their keyword:
+
+```javascript
+if (userIsLoggedIn) {
+    // Your code here
+    performAction();
+    updateUI();
+} else {
+    // Your code here
+    showLogin();
+    trackBounce();
+} // else
+
+for (const item of queue) {
+    // Your code here
+    process(item);
+    report(item);
+} // for (const item of queue)
+```
 
 Configure the extension through VS Code settings (`Ctrl+,` / `Cmd+,`):
 
@@ -117,7 +135,8 @@ Configure the extension through VS Code settings (`Ctrl+,` / `Cmd+,`):
 | `vscodeIfEndMarker.maxConditionLength` | number | `50` | Maximum characters to display from the condition |
 | `vscodeIfEndMarker.maxFileSize` | number | `500000` | Maximum file size (in characters) to process |
 | `vscodeIfEndMarker.debounceDelay` | number | `300` | Delay in milliseconds before updating decorations |
-| `vscodeIfEndMarker.minLineCount` | number | `4` | Minimum lines an if statement must span |
+| `vscodeIfEndMarker.minLineCount` | number | `4` | Minimum lines a block must span |
+| `vscodeIfEndMarker.constructs` | array | `["if", "else", "for", "while", "switch"]` | Which constructs get a marker |
 
 ### Example Configuration
 
@@ -127,9 +146,16 @@ Configure the extension through VS Code settings (`Ctrl+,` / `Cmd+,`):
   "vscodeIfEndMarker.maxConditionLength": 60,
   "vscodeIfEndMarker.maxFileSize": 1000000,
   "vscodeIfEndMarker.debounceDelay": 400,
-  "vscodeIfEndMarker.minLineCount": 3
+  "vscodeIfEndMarker.minLineCount": 3,
+  "vscodeIfEndMarker.constructs": ["if", "else"]
 }
 ```
+
+### Which constructs get a marker
+
+`constructs` is a list, so you can narrow it. Drop `for` and `while` to go back to conditionals only, or set it to `["if"]` for the original behaviour.
+
+There is no option for marking every `}`. In normally nested code that fills the gutter with hints you already know the answer to, which is why the list is limited to the constructs whose opening line scrolls out of view. `minLineCount` is the other half of that: a block has to be at least 4 lines tall before it gets a marker, so tight loops stay clean.
 
 ## 🏃‍♂️ Performance
 

@@ -11,14 +11,25 @@ export const CONFIG_KEYS = {
     MAX_CONDITION_LENGTH: 'maxConditionLength',
     MAX_FILE_SIZE: 'maxFileSize',
     DEBOUNCE_DELAY: 'debounceDelay',
-    MIN_LINE_COUNT: 'minLineCount'
+    MIN_LINE_COUNT: 'minLineCount',
+    CONSTRUCTS: 'constructs'
 } as const;
+
+/**
+ * Every construct that can carry an end-of-block marker. Deliberately short:
+ * these are the ones whose opening line scrolls out of view. A marker on every
+ * closing brace turns the gutter into noise in normally nested code.
+ */
+export const KNOWN_CONSTRUCTS = ['if', 'else', 'for', 'while', 'switch'] as const;
 
 /** Default configuration values */
 export const CONFIG_DEFAULTS = {
     /** Whether the extension is enabled */
     ENABLED: true,
-    
+
+    /** Which constructs get an end-of-block marker */
+    CONSTRUCTS: KNOWN_CONSTRUCTS,
+
     /** Maximum number of characters to display from the condition */
     MAX_CONDITION_LENGTH: 50,
     
