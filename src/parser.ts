@@ -1,7 +1,6 @@
-import { CONFIG_DEFAULTS } from './config';
+import { CONFIG_DEFAULTS, ConstructKind } from './config';
 
-/** A construct whose closing brace can carry an end-of-block marker. */
-export type ConstructKind = 'if' | 'else' | 'for' | 'while' | 'switch';
+export type { ConstructKind };
 
 /**
  * Represents a parsed block with its location and header information.

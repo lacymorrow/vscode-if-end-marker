@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { ASTParser, BlockMarker, ConstructKind } from './parser';
-import { CONFIG_NAMESPACE, CONFIG_KEYS, CONFIG_DEFAULTS, KNOWN_CONSTRUCTS, SUPPORTED_LANGUAGES } from './config';
+import { CONFIG_NAMESPACE, CONFIG_KEYS, CONFIG_DEFAULTS, SUPPORTED_LANGUAGES, resolveConstructs } from './config';
 import { formatBlockMarker } from './markerText';
 
 /**
@@ -122,19 +122,14 @@ export class IfStatementDecorationProvider {
     }
 
     /**
-     * Reads the configured construct list, ignoring any entry the parser does
-     * not recognise so a typo in settings cannot hide every marker.
+     * Reads the configured construct list. `resolveConstructs` owns what
+     * happens to an unrecognised or malformed value.
      *
      * @param config - Extension configuration
      * @returns The set of constructs that should get markers
      */
     private getEnabledConstructs(config: vscode.WorkspaceConfiguration): Set<ConstructKind> {
-        const configured = config.get<string[]>(CONFIG_KEYS.CONSTRUCTS, [...CONFIG_DEFAULTS.CONSTRUCTS]);
-        const known = new Set<string>(KNOWN_CONSTRUCTS);
-        return new Set(
-            (Array.isArray(configured) ? configured : [...CONFIG_DEFAULTS.CONSTRUCTS])
-                .filter((kind): kind is ConstructKind => known.has(kind))
-        );
+        return resolveConstructs(config.get<unknown>(CONFIG_KEYS.CONSTRUCTS));
     }
 
     /**

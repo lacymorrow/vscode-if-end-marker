@@ -153,7 +153,9 @@ Configure the extension through VS Code settings (`Ctrl+,` / `Cmd+,`):
 
 ### Which constructs get a marker
 
-`constructs` is a list, so you can narrow it. Drop `for` and `while` to go back to conditionals only, or set it to `["if"]` for the original behaviour.
+`constructs` is a list, so you can narrow it. Drop `for` and `while` to go back to conditionals only, or set it to `["if"]` for the original behaviour. An empty list `[]` turns every marker off.
+
+Misspell a name and that entry is ignored. Misspell all of them and you get the default list back rather than silence, so a typo shows up as "nothing changed" instead of "the extension is broken".
 
 There is no option for marking every `}`. In normally nested code that fills the gutter with hints you already know the answer to, which is why the list is limited to the constructs whose opening line scrolls out of view. `minLineCount` is the other half of that: a block has to be at least 4 lines tall before it gets a marker, so tight loops stay clean.
 

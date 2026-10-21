@@ -685,6 +685,30 @@ for await (const chunk of stream) {
         assert.strictEqual(results[1].condition, 'const chunk of stream');
     });
 
+    test('Should not treat whileTrue as a while loop', () => {
+        const code = `
+whileTrue(() => {
+    poll();
+    sleep(100);
+    report();
+});`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 0);
+    });
+
+    test('Should not treat switchMode as a switch statement', () => {
+        const code = `
+switchMode(nextMode, {
+    animate: true,
+    duration: 200,
+    easing: 'ease-out'
+});`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 0);
+    });
+
     test('Should not treat forEach as a for loop', () => {
         const code = `
 forEach(items, (item) => {
