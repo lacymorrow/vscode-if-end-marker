@@ -1,54 +1,133 @@
-import { CONFIG_DEFAULTS } from './config';
+import { CONFIG_DEFAULTS, ConstructKind } from './config';
+
+export type { ConstructKind };
 
 /**
- * Represents a parsed if statement with its location and condition information.
+ * Represents a parsed block with its location and header information.
  */
-export interface IfStatement {
-    /** The extracted condition text from the if statement */
+export interface BlockMarker {
+    /** Which construct opened the block */
+    kind: ConstructKind;
+    /**
+     * The extracted header text: the condition for `if`/`while`, the loop
+     * header for `for`, the subject for `switch`. Empty for `else`.
+     */
     condition: string;
-    /** Zero-based line number where the if statement starts */
+    /** Zero-based line number where the construct starts */
     startLine: number;
-    /** Zero-based line number where the if block ends (closing brace) */
+    /** Zero-based line number where the block ends (closing brace) */
     endLine: number;
-    /** Zero-based column position of the 'if' keyword */
+    /** Zero-based column position of the construct keyword */
     startColumn: number;
     /** Zero-based column position after the closing brace */
     endColumn: number;
 }
 
+/** How to recognise and read one construct. */
+interface ConstructSpec {
+    kind: ConstructKind;
+    /** Matches a trimmed line that opens this construct. */
+    linePattern: RegExp;
+    /**
+     * Locates the keyword in the raw line. The boundary groups stop a keyword
+     * buried in an identifier (`verify`, `forEach`) from being picked up.
+     */
+    keywordPattern: RegExp;
+    /** Length of the keyword, used to find the block when there is no header. */
+    keywordLength: number;
+    /** `else` is the one construct with no parenthesised header. */
+    hasHeader: boolean;
+}
+
 /**
- * Parser for extracting if statements from JavaScript/TypeScript/C/C++ code.
- * Uses a regex-based approach to find if statements and their closing braces.
+ * Parser for extracting markable blocks from JavaScript/TypeScript/C/C++ code.
+ * Uses a regex-based approach to find construct keywords and their closing braces.
  */
 export class ASTParser {
-    /** Pre-compiled regex pattern for if statement detection */
-    private static readonly IF_PATTERN = /^(\}\s*)?(else\s+)?if\s*\(/;
-    
     /**
-     * Parses the given code and extracts all if statements.
-     * 
-     * @param code - The source code to parse
-     * @param languageId - The language identifier (e.g., 'javascript', 'typescript')
-     * @returns Array of parsed if statements with their locations
+     * Constructs the parser recognises, checked in order. `if` comes before
+     * `else` so that `} else if (...)` is read as an `if`.
+     *
+     * Only `if` and `else` allow a leading `}` on the same line. Requiring the
+     * others to start the line is what keeps the trailing `while` of a
+     * `do { ... } while (cond);` from being mistaken for a loop header.
      */
-    parse(code: string, languageId: string): IfStatement[] {
-        const ifStatements: IfStatement[] = [];
+    private static readonly CONSTRUCTS: readonly ConstructSpec[] = [
+        {
+            kind: 'if',
+            linePattern: /^(\}\s*)?(else\s+)?if\s*\(/,
+            keywordPattern: /(^|[^A-Za-z0-9_$])if(?![A-Za-z0-9_$])/,
+            keywordLength: 2,
+            hasHeader: true
+        },
+        {
+            kind: 'else',
+            linePattern: /^(\}\s*)?else\b(?!\s*if\b)/,
+            keywordPattern: /(^|[^A-Za-z0-9_$])else(?![A-Za-z0-9_$])/,
+            keywordLength: 4,
+            hasHeader: false
+        },
+        {
+            kind: 'for',
+            linePattern: /^for\s*(await\s+)?\(/,
+            keywordPattern: /(^|[^A-Za-z0-9_$])for(?![A-Za-z0-9_$])/,
+            keywordLength: 3,
+            hasHeader: true
+        },
+        {
+            kind: 'while',
+            linePattern: /^while\s*\(/,
+            keywordPattern: /(^|[^A-Za-z0-9_$])while(?![A-Za-z0-9_$])/,
+            keywordLength: 5,
+            hasHeader: true
+        },
+        {
+            kind: 'switch',
+            linePattern: /^switch\s*\(/,
+            keywordPattern: /(^|[^A-Za-z0-9_$])switch(?![A-Za-z0-9_$])/,
+            keywordLength: 6,
+            hasHeader: true
+        }
+    ];
+
+    /**
+     * Parses the given code and extracts every markable block.
+     *
+     * Every construct is parsed regardless of user settings; filtering by the
+     * configured construct list happens at decoration time so that changing the
+     * setting does not invalidate cached parse results.
+     *
+     * @param code - The source code to parse
+     * @param languageId - The language identifier (e.g. 'javascript', 'typescript')
+     * @returns Array of parsed blocks with their locations, in line order
+     */
+    parse(code: string, languageId: string): BlockMarker[] {
+        const markers: BlockMarker[] = [];
         const lines = code.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
-        
+
         for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
-            const trimmedLine = line.trim();
-            
-            const ifMatch = ASTParser.IF_PATTERN.exec(trimmedLine);
-            if (ifMatch) {
-                const result = this.findIfBlockEnd(lines, i);
-                if (result) {
-                    ifStatements.push(result);
-                }
+            const trimmedLine = lines[i].trim();
+
+            for (const spec of ASTParser.CONSTRUCTS) {
+                if (!spec.linePattern.test(trimmedLine)) { continue; }
+
+                const result = this.findBlockEnd(lines, i, spec);
+                if (result) { markers.push(result); }
+                break;
             }
         }
-        
-        return ifStatements;
+
+        return markers;
+    }
+
+    /**
+     * Returns the column of the construct keyword in `line`, or -1 if the
+     * keyword only appears inside a longer identifier.
+     */
+    private static findKeyword(line: string, pattern: RegExp): number {
+        const match = pattern.exec(line);
+        if (!match) { return -1; }
+        return match.index + match[1].length;
     }
 
     /**
@@ -141,18 +220,19 @@ export class ASTParser {
         return -1; // not a literal/comment
     }
 
-    private findConditionEnd(lines: string[], startLine: number): { line: number; col: number } | null {
-        const line = lines[startLine];
-        const ifPos = line.indexOf('if');
-        if (ifPos === -1) { return null; }
-        const conditionStart = line.indexOf('(', ifPos);
-        if (conditionStart === -1) { return null; }
+    /**
+     * Finds the closing paren of the construct's header, starting from the
+     * keyword at `keywordCol` on `startLine`.
+     */
+    private findHeaderEnd(lines: string[], startLine: number, keywordCol: number): { line: number; col: number } | null {
+        const headerStart = lines[startLine].indexOf('(', keywordCol);
+        if (headerStart === -1) { return null; }
 
         let parenCount = 0;
 
         for (let i = startLine; i < lines.length && i < startLine + CONFIG_DEFAULTS.MAX_CONDITION_SEARCH_LINES; i++) {
             const currentLine = lines[i];
-            const startChar = i === startLine ? conditionStart : 0;
+            const startChar = i === startLine ? headerStart : 0;
 
             for (let j = startChar; j < currentLine.length; j++) {
                 const ch = currentLine[j];
@@ -195,40 +275,45 @@ export class ASTParser {
     }
 
     /**
-     * Finds the end of an if block by matching braces.
+     * Finds the end of a block by matching braces.
      * Skips braces inside strings, template literals, and comments.
-     * Only looks for the opening brace on the condition-end line or the
-     * first non-blank line after it, so braceless if statements are
+     * Only looks for the opening brace on the header-end line or the
+     * first non-blank line after it, so braceless constructs are
      * correctly skipped.
      */
-    private findIfBlockEnd(lines: string[], startLine: number): IfStatement | null {
+    private findBlockEnd(lines: string[], startLine: number, spec: ConstructSpec): BlockMarker | null {
         const startLineText = lines[startLine];
-        const condition = this.extractFullCondition(lines, startLine);
-        const startColumn = startLineText.indexOf('if');
+        const startColumn = ASTParser.findKeyword(startLineText, spec.keywordPattern);
+        if (startColumn === -1) { return null; }
 
-        const condEnd = this.findConditionEnd(lines, startLine);
-        if (!condEnd) { return null; }
+        // `else` has no header, so the block starts right after the keyword.
+        const headerEnd = spec.hasHeader
+            ? this.findHeaderEnd(lines, startLine, startColumn)
+            : { line: startLine, col: startColumn + spec.keywordLength - 1 };
+        if (!headerEnd) { return null; }
+
+        const condition = spec.hasHeader ? this.extractHeader(lines, startLine, startColumn) : '';
 
         let blockStartLine = -1;
         let braceSearchStart = 0;
 
-        const condEndLineText = lines[condEnd.line];
-        for (let j = condEnd.col + 1; j < condEndLineText.length; j++) {
-            const ch = condEndLineText[j];
+        const headerEndLineText = lines[headerEnd.line];
+        for (let j = headerEnd.col + 1; j < headerEndLineText.length; j++) {
+            const ch = headerEndLineText[j];
             if (ch === '{') {
-                blockStartLine = condEnd.line;
+                blockStartLine = headerEnd.line;
                 braceSearchStart = j;
                 break;
             }
-            if (ch === '/' && j + 1 < condEndLineText.length) {
-                if (condEndLineText[j + 1] === '/') {
+            if (ch === '/' && j + 1 < headerEndLineText.length) {
+                if (headerEndLineText[j + 1] === '/') {
                     break;
                 }
-                if (condEndLineText[j + 1] === '*') {
+                if (headerEndLineText[j + 1] === '*') {
                     let k = j + 2;
                     let closed = false;
-                    while (k < condEndLineText.length - 1) {
-                        if (condEndLineText[k] === '*' && condEndLineText[k + 1] === '/') {
+                    while (k < headerEndLineText.length - 1) {
+                        if (headerEndLineText[k] === '*' && headerEndLineText[k + 1] === '/') {
                             j = k + 1;
                             closed = true;
                             break;
@@ -245,7 +330,7 @@ export class ASTParser {
         }
 
         if (blockStartLine === -1) {
-            for (let i = condEnd.line + 1; i < lines.length && i <= condEnd.line + 2; i++) {
+            for (let i = headerEnd.line + 1; i < lines.length && i <= headerEnd.line + 2; i++) {
                 const trimmed = lines[i].trim();
                 if (trimmed === '') { continue; }
                 if (trimmed[0] === '{') {
@@ -294,6 +379,7 @@ export class ASTParser {
 
                     if (braceCount === 0) {
                         return {
+                            kind: spec.kind,
                             condition,
                             startLine,
                             endLine: i,
@@ -311,40 +397,40 @@ export class ASTParser {
 
         return null;
     }
-    
+
     /**
-     * Extracts the complete condition from an if statement.
-     * Handles multi-line conditions and skips parens inside strings,
+     * Extracts the complete parenthesised header of a construct.
+     * Handles multi-line headers and skips parens inside strings,
      * char literals, template literals, and comments.
      */
-    private extractFullCondition(lines: string[], startLine: number): string {
+    private extractHeader(lines: string[], startLine: number, keywordCol: number): string {
         const line = lines[startLine];
-        const conditionStart = line.indexOf('(');
-        
-        if (conditionStart === -1) {
+        const headerStart = line.indexOf('(', keywordCol);
+
+        if (headerStart === -1) {
             return '';
         }
-        
-        const conditionParts: string[] = [];
+
+        const headerParts: string[] = [];
         let parenCount = 0;
-        let startedCondition = false;
-        
+        let startedHeader = false;
+
         for (let i = startLine; i < lines.length && i < startLine + CONFIG_DEFAULTS.MAX_CONDITION_SEARCH_LINES; i++) {
             const currentLine = lines[i];
-            const startChar = i === startLine ? conditionStart : 0;
+            const startChar = i === startLine ? headerStart : 0;
             const lineSegment = currentLine.substring(startChar);
-            
+
             for (let j = 0; j < lineSegment.length; j++) {
                 const char = lineSegment[j];
 
                 // Skip string literals (double quotes)
                 if (char === '"') {
-                    if (startedCondition) { conditionParts.push(char); }
+                    if (startedHeader) { headerParts.push(char); }
                     j++;
                     while (j < lineSegment.length) {
                         const sc = lineSegment[j];
-                        if (startedCondition) { conditionParts.push(sc); }
-                        if (sc === '\\') { j++; if (j < lineSegment.length && startedCondition) { conditionParts.push(lineSegment[j]); } }
+                        if (startedHeader) { headerParts.push(sc); }
+                        if (sc === '\\') { j++; if (j < lineSegment.length && startedHeader) { headerParts.push(lineSegment[j]); } }
                         else if (sc === '"') { break; }
                         j++;
                     }
@@ -353,12 +439,12 @@ export class ASTParser {
 
                 // Skip character literals (single quotes)
                 if (char === '\'') {
-                    if (startedCondition) { conditionParts.push(char); }
+                    if (startedHeader) { headerParts.push(char); }
                     j++;
                     while (j < lineSegment.length) {
                         const sc = lineSegment[j];
-                        if (startedCondition) { conditionParts.push(sc); }
-                        if (sc === '\\') { j++; if (j < lineSegment.length && startedCondition) { conditionParts.push(lineSegment[j]); } }
+                        if (startedHeader) { headerParts.push(sc); }
+                        if (sc === '\\') { j++; if (j < lineSegment.length && startedHeader) { headerParts.push(lineSegment[j]); } }
                         else if (sc === '\'') { break; }
                         j++;
                     }
@@ -367,12 +453,12 @@ export class ASTParser {
 
                 // Skip template literals (backticks)
                 if (char === '`') {
-                    if (startedCondition) { conditionParts.push(char); }
+                    if (startedHeader) { headerParts.push(char); }
                     j++;
                     while (j < lineSegment.length) {
                         const sc = lineSegment[j];
-                        if (startedCondition) { conditionParts.push(sc); }
-                        if (sc === '\\') { j++; if (j < lineSegment.length && startedCondition) { conditionParts.push(lineSegment[j]); } }
+                        if (startedHeader) { headerParts.push(sc); }
+                        if (sc === '\\') { j++; if (j < lineSegment.length && startedHeader) { headerParts.push(lineSegment[j]); } }
                         else if (sc === '`') { break; }
                         j++;
                     }
@@ -399,29 +485,29 @@ export class ASTParser {
 
                 if (char === '(') {
                     parenCount++;
-                    startedCondition = true;
+                    startedHeader = true;
                 }
-                
-                if (startedCondition) {
-                    conditionParts.push(char);
+
+                if (startedHeader) {
+                    headerParts.push(char);
                 }
-                
+
                 if (char === ')') {
                     parenCount--;
-                    
+
                     if (parenCount === 0) {
-                        const fullCondition = conditionParts.join('');
-                        return fullCondition.slice(1, -1).replace(/\s+/g, ' ').trim();
+                        const fullHeader = headerParts.join('');
+                        return fullHeader.slice(1, -1).replace(/\s+/g, ' ').trim();
                     }
                 }
             }
-            
-            if (startedCondition && i !== startLine) {
-                conditionParts.push(' ');
+
+            if (startedHeader && i !== startLine) {
+                headerParts.push(' ');
             }
         }
-        
-        const condition = conditionParts.join('');
-        return condition.slice(1).replace(/\s+/g, ' ').trim();
+
+        const header = headerParts.join('');
+        return header.slice(1).replace(/\s+/g, ' ').trim();
     }
 }

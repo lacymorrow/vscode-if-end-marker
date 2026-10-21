@@ -1,7 +1,7 @@
 {
   "name": "vscode-if-end-marker",
   "displayName": "If End Marker",
-  "description": "Never lose track of which if statement you're closing! Shows inline markers with the original condition at closing braces in JS/TS/C/C++ files.",
+  "description": "Never lose track of which block you're closing! Shows inline markers with the original if, else, for, while or switch at closing braces in JS/TS/C/C++ files.",
   "version": "0.3.8",
   "publisher": "shipkit",
   "author": {
@@ -25,6 +25,10 @@
     "extension",
     "if",
     "if-statement",
+    "else",
+    "for",
+    "while",
+    "switch",
     "condition",
     "marker",
     "inlay-hints",
@@ -93,7 +97,29 @@
           "type": "number",
           "default": 4,
           "minimum": 2,
-          "description": "Minimum number of lines an if statement must span to show markers"
+          "description": "Minimum number of lines a block must span to show markers"
+        },
+        "vscodeIfEndMarker.constructs": {
+          "type": "array",
+          "default": [
+            "if",
+            "else",
+            "for",
+            "while",
+            "switch"
+          ],
+          "items": {
+            "type": "string",
+            "enum": [
+              "if",
+              "else",
+              "for",
+              "while",
+              "switch"
+            ]
+          },
+          "uniqueItems": true,
+          "description": "Which constructs get an end-of-block marker. Remove an entry to turn its markers off."
         }
       }
     },
