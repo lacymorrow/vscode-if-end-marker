@@ -70,7 +70,7 @@ export const CONFIG_DEFAULTS = {
  * An explicitly empty list is honoured as "mark nothing", since that is the
  * only way to say it and it cannot be a typo.
  *
- * @param configured - The raw setting value, trusted to be nothing
+ * @param configured - The raw setting value, which may be any shape or absent
  * @returns The set of constructs that should get markers
  */
 export function resolveConstructs(configured: unknown): Set<ConstructKind> {
