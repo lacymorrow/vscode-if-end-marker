@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { ASTParser, BlockMarker, ConstructKind } from './parser';
 import { CONFIG_NAMESPACE, CONFIG_KEYS, CONFIG_DEFAULTS, SUPPORTED_LANGUAGES, resolveConstructs } from './config';
 import { formatBlockMarker } from './markerText';
+import { selectMarkers } from './markerSelection';
 
 /**
  * Provides decoration functionality for displaying a block's opening line
@@ -90,10 +91,11 @@ export class IfStatementDecorationProvider {
             });
         }
 
-        // Drop constructs the user has turned off. Filtering here rather than in
-        // the parser keeps cached parse results valid across a settings change.
-        const enabledConstructs = this.getEnabledConstructs(config);
-        const wantedBlocks = blocks.filter(block => enabledConstructs.has(block.kind));
+        // Drop the constructs the user has turned off, and the links of an
+        // if/else chain that the chain's final marker already accounts for.
+        // Filtering here rather than in the parser keeps cached parse results
+        // valid across a settings change.
+        const wantedBlocks = selectMarkers(blocks, this.getEnabledConstructs(config));
 
         // Only create decorations for visible ranges
         const visibleRanges = editor.visibleRanges;
