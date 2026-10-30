@@ -549,4 +549,257 @@ if (x ? true : false) {
         assert.strictEqual(results.length, 1);
         assert.strictEqual(results[0].condition, 'x ? true : false');
     });
+
+    // --- Construct kinds (GH #58) ---
+
+    test('Should tag an if statement with kind "if"', () => {
+        const code = `
+if (ready) {
+    go();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].kind, 'if');
+    });
+
+    test('Should mark the closing brace of an else block', () => {
+        const code = `
+if (a) {
+    first();
+} else {
+    second();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 2);
+        assert.strictEqual(results[0].kind, 'if');
+        assert.strictEqual(results[0].condition, 'a');
+        assert.strictEqual(results[0].endLine, 3);
+        assert.strictEqual(results[1].kind, 'else');
+        assert.strictEqual(results[1].condition, '');
+        assert.strictEqual(results[1].startLine, 3);
+        assert.strictEqual(results[1].endLine, 5);
+    });
+
+    test('Should put the else keyword column in startColumn', () => {
+        const code = `if (a) {
+    first();
+} else {
+    second();
+}`;
+        const results = parser.parse(code, 'javascript');
+        const elseBlock = results.find(r => r.kind === 'else');
+
+        assert.ok(elseBlock);
+        assert.strictEqual(elseBlock.startColumn, 2);
+        assert.strictEqual(elseBlock.endColumn, 1);
+    });
+
+    test('Should mark an else block with its brace on the next line', () => {
+        const code = `
+if (a) {
+    first();
+}
+else
+{
+    second();
+}`;
+        const results = parser.parse(code, 'javascript');
+        const elseBlocks = results.filter(r => r.kind === 'else');
+
+        assert.strictEqual(elseBlocks.length, 1);
+        assert.strictEqual(elseBlocks[0].startLine, 4);
+        assert.strictEqual(elseBlocks[0].endLine, 7);
+    });
+
+    test('Should read "else if" as an if, not as a bare else', () => {
+        const code = `
+if (a) {
+    first();
+} else if (b) {
+    second();
+} else {
+    third();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 3);
+        assert.strictEqual(results[0].kind, 'if');
+        assert.strictEqual(results[1].kind, 'if');
+        assert.strictEqual(results[1].condition, 'b');
+        assert.strictEqual(results[2].kind, 'else');
+    });
+
+    test('Should skip a braceless else', () => {
+        const code = `
+if (a) {
+    first();
+} else
+    second();`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].kind, 'if');
+    });
+
+    test('Should not treat an identifier starting with else as an else block', () => {
+        const code = `
+elsewhere = {
+    a: 1,
+    b: 2,
+    c: 3
+};`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 0);
+    });
+
+    test('Should mark a for loop with its header', () => {
+        const code = `
+for (let i = 0; i < items.length; i++) {
+    process(items[i]);
+    log(i);
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].kind, 'for');
+        assert.strictEqual(results[0].condition, 'let i = 0; i < items.length; i++');
+        assert.strictEqual(results[0].endLine, 4);
+    });
+
+    test('Should mark a for-of and a for-await-of loop', () => {
+        const code = `
+for (const item of items) {
+    use(item);
+}
+for await (const chunk of stream) {
+    use(chunk);
+}`;
+        const results = parser.parse(code, 'typescript');
+
+        assert.strictEqual(results.length, 2);
+        assert.strictEqual(results[0].condition, 'const item of items');
+        assert.strictEqual(results[1].kind, 'for');
+        assert.strictEqual(results[1].condition, 'const chunk of stream');
+    });
+
+    test('Should not treat whileTrue as a while loop', () => {
+        const code = `
+whileTrue(() => {
+    poll();
+    sleep(100);
+    report();
+});`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 0);
+    });
+
+    test('Should not treat switchMode as a switch statement', () => {
+        const code = `
+switchMode(nextMode, {
+    animate: true,
+    duration: 200,
+    easing: 'ease-out'
+});`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 0);
+    });
+
+    test('Should not treat forEach as a for loop', () => {
+        const code = `
+forEach(items, (item) => {
+    use(item);
+});`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 0);
+    });
+
+    test('Should mark a while loop', () => {
+        const code = `
+while (queue.length > 0) {
+    handle(queue.pop());
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].kind, 'while');
+        assert.strictEqual(results[0].condition, 'queue.length > 0');
+    });
+
+    test('Should not mark the trailing while of a do-while loop', () => {
+        const code = `
+do {
+    step();
+    count++;
+} while (count < limit);`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 0);
+    });
+
+    test('Should mark a switch statement with its subject', () => {
+        const code = `
+switch (action.type) {
+    case 'add':
+        return add();
+    default:
+        return noop();
+}`;
+        const results = parser.parse(code, 'typescript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].kind, 'switch');
+        assert.strictEqual(results[0].condition, 'action.type');
+        assert.strictEqual(results[0].endLine, 6);
+    });
+
+    test('Should mark a loop nested inside an if', () => {
+        const code = `
+if (shouldRun) {
+    for (const item of items) {
+        use(item);
+    }
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 2);
+        assert.strictEqual(results[0].kind, 'if');
+        assert.strictEqual(results[0].endLine, 5);
+        assert.strictEqual(results[1].kind, 'for');
+        assert.strictEqual(results[1].endLine, 4);
+    });
+
+    test('Should mark a C for loop and a C switch', () => {
+        const code = `
+for (int i = 0; i < n; i++) {
+    total += values[i];
+}
+switch (state) {
+    case READY:
+        break;
+    default:
+        break;
+}`;
+        const results = parser.parse(code, 'c');
+
+        assert.strictEqual(results.length, 2);
+        assert.strictEqual(results[0].kind, 'for');
+        assert.strictEqual(results[0].condition, 'int i = 0; i < n; i++');
+        assert.strictEqual(results[1].kind, 'switch');
+        assert.strictEqual(results[1].condition, 'state');
+    });
+
+    test('Should skip a braceless for loop', () => {
+        const code = `
+for (int i = 0; i < n; i++)
+    total += values[i];`;
+        const results = parser.parse(code, 'c');
+
+        assert.strictEqual(results.length, 0);
+    });
 });
