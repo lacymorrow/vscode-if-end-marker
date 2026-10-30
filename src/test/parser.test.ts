@@ -802,4 +802,290 @@ for (int i = 0; i < n; i++)
 
         assert.strictEqual(results.length, 0);
     });
+    // --- Chain continuation: which construct carries the end of an if/else chain ---
+
+    test('Should report the else that continues an if block', () => {
+        const code = `
+if (ready) {
+    a();
+    b();
+} else {
+    c();
+    d();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 2);
+        assert.strictEqual(results[0].kind, 'if');
+        assert.strictEqual(results[0].continuedBy, 'else');
+        assert.strictEqual(results[1].kind, 'else');
+        assert.strictEqual(results[1].continuedBy, undefined);
+    });
+
+    test('Should report an else-if continuation as kind if', () => {
+        const code = `
+if (a) {
+    one();
+} else if (b) {
+    two();
+} else {
+    three();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 3);
+        assert.strictEqual(results[0].continuedBy, 'if');
+        assert.strictEqual(results[1].continuedBy, 'else');
+        assert.strictEqual(results[2].continuedBy, undefined);
+    });
+
+    test('Should report an else that sits on the line after the brace', () => {
+        const code = `
+if (ready)
+{
+    a();
+}
+else
+{
+    b();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 2);
+        assert.strictEqual(results[0].continuedBy, 'else');
+        assert.strictEqual(results[1].continuedBy, undefined);
+    });
+
+    test('Should report a continuation with no space around the brace', () => {
+        const code = `
+if (a) {
+    one();
+    two();
+}else{
+    three();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results[0].continuedBy, 'else');
+    });
+
+    test('Should leave continuedBy unset for an if with no else', () => {
+        const code = `
+if (a) {
+    one();
+    two();
+    three();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].continuedBy, undefined);
+    });
+
+    test('Should not read an identifier starting with else as a continuation', () => {
+        const code = `
+if (a) {
+    one();
+    two();
+} elsewhere();`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].continuedBy, undefined);
+    });
+
+    test('Should not report a loop brace as continued', () => {
+        const code = `
+for (const x of xs) {
+    one();
+    two();
+    three();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results[0].continuedBy, undefined);
+    });
+
+    // --- Labels ---
+
+    test('Should mark a labeled for loop', () => {
+        const code = `
+outer: for (const a of b) {
+    one();
+    two();
+    three();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].kind, 'for');
+        assert.strictEqual(results[0].condition, 'const a of b');
+        assert.strictEqual(results[0].startLine, 1);
+        assert.strictEqual(results[0].endLine, 5);
+        assert.strictEqual(results[0].startColumn, 7);
+    });
+
+    test('Should mark a labeled while loop', () => {
+        const code = `
+loop: while (a) {
+    one();
+    two();
+    three();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].kind, 'while');
+        assert.strictEqual(results[0].condition, 'a');
+        assert.strictEqual(results[0].endLine, 5);
+    });
+
+    test('Should mark a labeled loop with no space around the colon', () => {
+        const code = `
+outer:for (const a of b) {
+    one();
+    two();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].kind, 'for');
+        assert.strictEqual(results[0].startColumn, 6);
+    });
+
+    test('Should mark a label whose name contains a keyword', () => {
+        const code = `
+forever: for (const a of b) {
+    one();
+    two();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].kind, 'for');
+        assert.strictEqual(results[0].condition, 'const a of b');
+    });
+
+    test('Should still not mark the trailing while of a labeled do-while loop', () => {
+        const code = `
+outer: do {
+    one();
+    two();
+    three();
+} while (a);`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 0);
+    });
+
+    test('Should not read a ternary as a label', () => {
+        const code = `
+const x = a ? b : c;
+const y = 1;`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 0);
+    });
+
+    test('Should not read an object property as a label', () => {
+        const code = `
+const handlers = {
+    forEach: fn,
+    switchMode: true,
+    whileActive: 1
+};`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 0);
+    });
+
+    // --- Multi-line template literals and block comments ---
+
+    test('Should not mark a for loop inside a template literal', () => {
+        const code = `
+const s = \`
+for (let i = 0; i < n; i++) {
+    x;
+    y;
+}
+\`;`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 0);
+    });
+
+    test('Should not mark a switch inside a block comment', () => {
+        const code = `
+/*
+switch (a) {
+    case 1:
+        break;
+}
+*/`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 0);
+    });
+
+    test('Should mark real code that follows a multi-line template literal', () => {
+        const code = `
+const s = \`
+for (let i = 0; i < n; i++) {
+    x;
+}
+\`;
+if (ready) {
+    one();
+    two();
+    three();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].kind, 'if');
+        assert.strictEqual(results[0].condition, 'ready');
+        assert.strictEqual(results[0].startLine, 6);
+        assert.strictEqual(results[0].endLine, 10);
+    });
+
+    test('Should mark real code that follows a multi-line block comment', () => {
+        const code = `
+/*
+switch (a) {
+    case 1:
+        break;
+}
+*/
+while (going) {
+    one();
+    two();
+    three();
+}`;
+        const results = parser.parse(code, 'javascript');
+
+        assert.strictEqual(results.length, 1);
+        assert.strictEqual(results[0].kind, 'while');
+        assert.strictEqual(results[0].condition, 'going');
+        assert.strictEqual(results[0].startLine, 7);
+    });
+
+    // --- Cost on a brace-unbalanced file ---
+
+    test('Should stay linear on a file whose braces never balance', () => {
+        const lines: string[] = [];
+        for (let i = 0; i < 10000; i++) {
+            lines.push(`if (c${i}) {`);
+        }
+        const code = lines.join('\n');
+
+        const started = Date.now();
+        const results = parser.parse(code, 'javascript');
+        const elapsed = Date.now() - started;
+
+        assert.strictEqual(results.length, 0);
+        assert.ok(
+            elapsed < 500,
+            `parse of 10000 unbalanced lines took ${elapsed}ms, which is the quadratic walk returning`
+        );
+    });
 });

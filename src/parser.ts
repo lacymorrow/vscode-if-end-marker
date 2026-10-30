@@ -21,7 +21,23 @@ export interface BlockMarker {
     startColumn: number;
     /** Zero-based column position after the closing brace */
     endColumn: number;
+    /**
+     * The construct that continues this block's closing brace, if any: `else`
+     * for `} else {`, `if` for `} else if (...) {`. Only an `if` or `else`
+     * block can be continued. Marker selection uses this to leave an if/else
+     * chain with a single marker, on the chain's final brace.
+     */
+    continuedBy?: ConstructKind;
 }
+
+/** A position in the source, used for brace matching. */
+interface BracePosition {
+    line: number;
+    col: number;
+}
+
+/** Every opening brace in a file, keyed by position, mapped to its close. */
+type BraceMap = Map<string, BracePosition>;
 
 /** How to recognise and read one construct. */
 interface ConstructSpec {
@@ -91,6 +107,19 @@ export class ASTParser {
     ];
 
     /**
+     * A statement label (`outer: for (...)`) sitting between the start of the
+     * line and the construct keyword.
+     */
+    private static readonly LABEL = /^[A-Za-z_$][A-Za-z0-9_$]*\s*:\s*/;
+
+    /**
+     * An `else` continuing a closing brace, with the `if` of an `else if`
+     * captured so the continuation can be reported as the kind the parser
+     * will actually give it.
+     */
+    private static readonly CONTINUATION = /^\s*else(?![A-Za-z0-9_$])\s*(if(?![A-Za-z0-9_$]))?/;
+
+    /**
      * Parses the given code and extracts every markable block.
      *
      * Every construct is parsed regardless of user settings; filtering by the
@@ -104,20 +133,140 @@ export class ASTParser {
     parse(code: string, languageId: string): BlockMarker[] {
         const markers: BlockMarker[] = [];
         const lines = code.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+        const blockEnds = ASTParser.matchBraces(lines);
 
         for (let i = 0; i < lines.length; i++) {
-            const trimmedLine = lines[i].trim();
+            const spec = ASTParser.matchConstruct(lines[i].trim());
+            if (!spec) { continue; }
 
-            for (const spec of ASTParser.CONSTRUCTS) {
-                if (!spec.linePattern.test(trimmedLine)) { continue; }
-
-                const result = this.findBlockEnd(lines, i, spec);
-                if (result) { markers.push(result); }
-                break;
-            }
+            const result = this.findBlockEnd(lines, i, spec, blockEnds);
+            if (result) { markers.push(result); }
         }
 
         return markers;
+    }
+
+    /**
+     * Returns the construct a line opens, or undefined if it opens none.
+     *
+     * A label is stripped and the line retried rather than relaxing the
+     * patterns, which are anchored to the start of the line on purpose: only
+     * `if` and `else` may lead with a `}`, and that is what keeps the trailing
+     * `while` of `do { ... } while (cond);` from reading as a loop header.
+     *
+     * @param trimmedLine - The line with surrounding whitespace removed
+     * @returns The matching construct spec, or undefined
+     */
+    private static matchConstruct(trimmedLine: string): ConstructSpec | undefined {
+        for (const spec of ASTParser.CONSTRUCTS) {
+            if (spec.linePattern.test(trimmedLine)) { return spec; }
+        }
+
+        const label = ASTParser.LABEL.exec(trimmedLine);
+        if (!label) { return undefined; }
+
+        const labelled = trimmedLine.slice(label[0].length);
+        for (const spec of ASTParser.CONSTRUCTS) {
+            if (spec.linePattern.test(labelled)) { return spec; }
+        }
+
+        return undefined;
+    }
+
+    /**
+     * Matches every brace in the file in one pass, skipping braces inside
+     * strings, template literals and comments.
+     *
+     * One shared pass is what keeps parsing linear. Walking forward from each
+     * construct's opening brace instead was quadratic on a file whose braces
+     * never balance, which is most of a file while it is being typed, and
+     * parsing runs on a 300ms debounce.
+     *
+     * Braces inside a multi-line template literal or block comment are never
+     * recorded, so a construct written inside one finds no closing brace and
+     * gets no marker.
+     *
+     * @param lines - The source split into lines
+     * @returns A map from each opening brace to its closing brace. An opening
+     *          brace that never closes is absent.
+     */
+    private static matchBraces(lines: string[]): BraceMap {
+        const blockEnds: BraceMap = new Map();
+        const open: BracePosition[] = [];
+        const ctx = { line: 0, pos: 0 };
+
+        let i = 0;
+        let nextPos = 0;
+
+        while (i < lines.length) {
+            const line = lines[i];
+            let pos = nextPos;
+            let jumped = false;
+            nextPos = 0;
+
+            while (pos < line.length) {
+                const ch = line[pos];
+
+                if (ch === '"' || ch === '\'' || ch === '`' || (ch === '/' && pos + 1 < line.length && (line[pos + 1] === '/' || line[pos + 1] === '*'))) {
+                    ctx.line = i;
+                    ctx.pos = pos;
+                    const end = ASTParser.skipLiteral(lines, i, pos, ctx);
+                    if (end !== -1) {
+                        if (ctx.line !== i) {
+                            i = ctx.line;
+                            nextPos = ctx.pos + 1;
+                            jumped = true;
+                            break;
+                        }
+                        pos = end + 1;
+                        continue;
+                    }
+                }
+
+                if (ch === '{') {
+                    open.push({ line: i, col: pos });
+                } else if (ch === '}') {
+                    const opened = open.pop();
+                    if (opened) {
+                        blockEnds.set(ASTParser.braceKey(opened.line, opened.col), { line: i, col: pos });
+                    }
+                }
+                pos++;
+            }
+
+            if (jumped) { continue; }
+            i++;
+        }
+
+        return blockEnds;
+    }
+
+    /** Key for one brace position in the brace-matching map. */
+    private static braceKey(line: number, col: number): string {
+        return `${line}:${col}`;
+    }
+
+    /**
+     * Reads the construct continuing a closing brace, so an if/else chain can
+     * be marked once at its end instead of once per link.
+     *
+     * The `else` may share the brace's line (`} else {`) or start the next one,
+     * which is the same brace style the opening-brace search already allows.
+     *
+     * @param lines - The source split into lines
+     * @param braceLine - Zero-based line of the closing brace
+     * @param afterBrace - Zero-based column just past the closing brace
+     * @returns The continuing construct's kind, or undefined
+     */
+    private static findContinuation(lines: string[], braceLine: number, afterBrace: number): ConstructKind | undefined {
+        const sameLine = lines[braceLine].slice(afterBrace);
+        const candidate = sameLine.trim() === '' && braceLine + 1 < lines.length
+            ? lines[braceLine + 1]
+            : sameLine;
+
+        const match = ASTParser.CONTINUATION.exec(candidate);
+        if (!match) { return undefined; }
+        return match[1] ? 'if' : 'else';
     }
 
     /**
@@ -275,13 +424,18 @@ export class ASTParser {
     }
 
     /**
-     * Finds the end of a block by matching braces.
-     * Skips braces inside strings, template literals, and comments.
+     * Finds the end of a block by looking its opening brace up in the
+     * pre-matched brace table.
      * Only looks for the opening brace on the header-end line or the
      * first non-blank line after it, so braceless constructs are
      * correctly skipped.
      */
-    private findBlockEnd(lines: string[], startLine: number, spec: ConstructSpec): BlockMarker | null {
+    private findBlockEnd(
+        lines: string[],
+        startLine: number,
+        spec: ConstructSpec,
+        blockEnds: BraceMap
+    ): BlockMarker | null {
         const startLineText = lines[startLine];
         const startColumn = ASTParser.findKeyword(startLineText, spec.keywordPattern);
         if (startColumn === -1) { return null; }
@@ -344,58 +498,21 @@ export class ASTParser {
 
         if (blockStartLine === -1) { return null; }
 
-        let braceCount = 0;
-        const ctx = { line: 0, pos: 0 };
-        let i = blockStartLine;
-        let nextPos = braceSearchStart;
+        const blockEnd = blockEnds.get(ASTParser.braceKey(blockStartLine, braceSearchStart));
+        if (!blockEnd) { return null; }
 
-        while (i < lines.length) {
-            const line = lines[i];
-            let pos = nextPos;
-            nextPos = 0;
+        const endColumn = blockEnd.col + 1;
+        const continuedBy = ASTParser.findContinuation(lines, blockEnd.line, endColumn);
 
-            while (pos < line.length) {
-                const ch = line[pos];
-
-                if (ch === '"' || ch === '\'' || ch === '`' || (ch === '/' && pos + 1 < line.length && (line[pos + 1] === '/' || line[pos + 1] === '*'))) {
-                    ctx.line = i;
-                    ctx.pos = pos;
-                    const end = ASTParser.skipLiteral(lines, i, pos, ctx);
-                    if (end !== -1) {
-                        if (ctx.line !== i) {
-                            i = ctx.line;
-                            nextPos = ctx.pos + 1;
-                            break;
-                        }
-                        pos = end + 1;
-                        continue;
-                    }
-                }
-
-                if (ch === '{') {
-                    braceCount++;
-                } else if (ch === '}') {
-                    braceCount--;
-
-                    if (braceCount === 0) {
-                        return {
-                            kind: spec.kind,
-                            condition,
-                            startLine,
-                            endLine: i,
-                            startColumn,
-                            endColumn: pos + 1
-                        };
-                    }
-                }
-                pos++;
-            }
-
-            if (nextPos > 0) { continue; }
-            i++;
-        }
-
-        return null;
+        return {
+            kind: spec.kind,
+            condition,
+            startLine,
+            endLine: blockEnd.line,
+            startColumn,
+            endColumn,
+            continuedBy
+        };
     }
 
     /**
