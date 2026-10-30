@@ -167,7 +167,7 @@
     "@vscode/vsce": "^3.9.2",
     "glob": "^13.0.6",
     "husky": "^9.1.7",
-    "mocha": "^11.8.0",
+    "mocha": "^12.0.3",
     "semantic-release": "^25.0.9",
     "standard-version": "^9.5.0",
     "typescript": "^6.0.3"
