@@ -8,6 +8,9 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "chore(deps)"
+    ignore:
+      # Must stay in step with engines.vscode; vsce package fails otherwise.
+      - dependency-name: "@types/vscode"
     groups:
       dev-dependencies:
         dependency-type: development
