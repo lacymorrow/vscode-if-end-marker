@@ -2,7 +2,7 @@
   "name": "vscode-if-end-marker",
   "displayName": "If End Marker",
   "description": "Never lose track of which block you're closing! Shows inline markers with the original if, else, for, while or switch at closing braces in JS/TS/C/C++ files.",
-  "version": "0.3.8",
+  "version": "0.4.0",
   "publisher": "shipkit",
   "author": {
     "name": "Lacy Morrow",

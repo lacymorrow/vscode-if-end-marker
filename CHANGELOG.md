@@ -1,3 +1,16 @@
+# [0.4.0](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.3.8...v0.4.0) (2026-11-16)
+
+
+### Bug Fixes
+
+* **markers:** one marker per if/else chain, labeled loops, linear brace matching ([#65](https://github.com/lacymorrow/vscode-if-end-marker/issues/65)) ([c962efe](https://github.com/lacymorrow/vscode-if-end-marker/commit/c962efe3496addfa09a137229c8dbbc1b1ede39c)), closes [#59](https://github.com/lacymorrow/vscode-if-end-marker/issues/59) [#60](https://github.com/lacymorrow/vscode-if-end-marker/issues/60)
+* **release:** pin @types/vscode to engines.vscode so vsce package passes ([#67](https://github.com/lacymorrow/vscode-if-end-marker/issues/67)) ([1691c10](https://github.com/lacymorrow/vscode-if-end-marker/commit/1691c10d9c9494af3da950815b7de975e4c1e5e0))
+
+
+### Features
+
+* **markers:** mark the end of else, for, while and switch blocks ([#59](https://github.com/lacymorrow/vscode-if-end-marker/issues/59)) ([1a5aff9](https://github.com/lacymorrow/vscode-if-end-marker/commit/1a5aff9a30ee656f403bfc94a2807c54dc1f9592))
+
 ## [0.3.6](https://github.com/lacymorrow/vscode-if-end-marker/compare/v0.3.5...v0.3.6) (2026-05-20)
 
 
